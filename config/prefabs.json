@@ -1,0 +1,16 @@
+{
+  "test": "ciao2",
+  "colors": [
+    {
+      "color": "0x000000ff",
+      "kind": 1
+    }
+  ],
+  "connectors": [
+    {
+      "direction": 1,
+      "color": "0x000000ff"
+    }
+  ],
+  "prefabs":[ {"name": "prefab1","path":"prefab1.png"}, {"name": "prefab2","path":"prefab2.png"}, {"name": "prefab3","path":"prefab3.png"}, {"name": "prefab4","path":"prefab4.png"} ]
+}
