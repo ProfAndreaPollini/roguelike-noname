@@ -9,6 +9,7 @@ add_subdirectory(world)
 add_subdirectory(items)
 add_subdirectory(ui)
 add_subdirectory(scenes)
+add_subdirectory(events)
 
 
 target_include_directories(rl_da_zero PRIVATE .)

@@ -36,6 +36,7 @@ class GameCtx {
     GameCtx() {
         map_.reset(new Map(800, 600));
         //        renderer_.reset(new Renderer());
+        hero_.reset(new Hero());
     }
 
     GameCtx(const GameCtx&) = delete;

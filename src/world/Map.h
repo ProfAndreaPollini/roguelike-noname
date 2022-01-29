@@ -18,22 +18,14 @@ class Map {
    public:
     using RoomPtr = std::shared_ptr<Room>;
 
-    ~Map() =default;
+    ~Map() = default;
 
     Map(int width, int height) : width_(width), height_(height) {}
-
-//    auto operator()(int row, int col) -> Cell {
-//        for (const auto& room : rooms_.elements()) {
-//            if (room->contains(col, row)) {
-//                return room->get(row, col);
-//            }
-//        }
-//    }
 
     [[nodiscard]] auto overlaps(std::shared_ptr<Room> room) const -> bool {
         auto rooms = rooms_.elements();
         for (const auto& otherRoom : rooms) {
-//            auto *other = otherRoom.get();
+            //            auto *other = otherRoom.get();
             if (room->overlaps(*otherRoom)) {
                 return true;
             }
@@ -127,6 +119,7 @@ class Map {
                 return room->getItemAt(col, row);
             }
         }
+        return nullptr;
     }
 
     void removeItemAt(int col, int row) {
@@ -137,9 +130,13 @@ class Map {
         }
     }
 
-    [[maybe_unused]] auto getRoom(int index) const -> const Room& { return *rooms_.elements()[index]; }
+    [[maybe_unused]] auto getRoom(int index) const -> const Room& {
+        return *rooms_.elements()[index];
+    }
 
-    [[maybe_unused]] auto getRoom(int index) -> RoomPtr { return rooms_.elementAt(index); }
+    [[maybe_unused]] auto getRoom(int index) -> RoomPtr {
+        return rooms_.elementAt(index);
+    }
 
     auto getRoomWithConnections() -> RoomPtr {
         auto n = roomWithConnectionCount();
@@ -171,7 +168,9 @@ class Map {
     }
 
     /// Returns the number of rooms
-    [[nodiscard]] auto roomCount() const -> int { return rooms_.elements().size(); }
+    [[nodiscard]] auto roomCount() const -> int {
+        return rooms_.elements().size();
+    }
 
     /// Returns the number of rooms with at least one connection
     [[nodiscard]] auto roomWithConnectionCount() const -> int {

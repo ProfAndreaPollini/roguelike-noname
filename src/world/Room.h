@@ -69,7 +69,7 @@ class Room {
     void spawnItems() {
         for (int i = 0; i < 5; i++) {
             if (Rng::getInstance().getRandomInt(0, 100) < 50) {
-                cells_[Rng::getInstance().getRandomInt(0, cells_.size())]
+                cells_[Rng::getInstance().getRandomInt(0, cells_.size() - 1)]
                     .cell.item = new SwordItem();
             }
         }
@@ -118,16 +118,14 @@ class Room {
         return false;
     }
 
-    Item* getItemAt(int col, int row)  {
+    Item* getItemAt(int col, int row) {
         for (auto& cell : cells_) {
             if (cell.coords().col == col && cell.coords().row == row) {
-
                 if (cell.cell.item) {
                     fmt::print("item = {}\n", cell.cell.item->name());
                     return cell.cell.item;
                     cell.cell.item = nullptr;
                 }
-
             }
         }
         return nullptr;
@@ -136,14 +134,13 @@ class Room {
     void removeItemAt(int col, int row) {
         for (auto& cell : cells_) {
             if (cell.coords().col == col && cell.coords().row == row) {
-
                 cell.cell.item = nullptr;
                 return;
             }
         }
     }
 
-    Cell& get(int col, int row)  {
+    Cell& get(int col, int row) {
         for (auto& cell : cells_) {
             if (cell.coords().col == col && cell.coords().row == row) {
                 return cell.cell;

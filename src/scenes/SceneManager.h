@@ -9,46 +9,50 @@
 #include <unordered_map>
 
 #include "Scene.h"
-
 #include "util.h"
 
 class SceneManager {
-public:
+   public:
     static SceneManager& getInstance() {
         static SceneManager instance;
         return instance;
     }
 
-    void addScene(const std::string& name, Rc<Scene> scene) {
+    void addScene(const std::string& name, Scene* scene) {
         scenes_[name] = scene;
     }
 
-    void removeScene(const std::string& name) {
-        scenes_.erase(name);
-    }
+    void removeScene(const std::string& name) { scenes_.erase(name); }
 
-    void changeScene(const std::string& name) {
-        if (currentScene_) {
-            currentScene_->onUnload();
+    void changeScene(const std::string& name);
+
+    Scene* updateSceneIfNeeded() {
+        if (currentScene_ != nextScene_ and nextScene_ != nullptr) {
+            currentScene_ = nextScene_;
+            nextScene_ = nullptr;
+            currentScene_->onLoad();
+
         }
-
-        currentScene_ = scenes_[name].get();
-        currentScene_->onLoad();
-    }
-
-    Scene* getCurrentScene() {
-        return currentScene_;
-    }
-
-    private:
-    SceneManager() {
+            return currentScene_;
 
     }
-     SceneManager(const SceneManager&) = delete;
+
+    Scene* getCurrentScene() { return currentScene_; }
+
+    ~SceneManager() {
+        for (auto& scene : scenes_) {
+            delete scene.second;
+        }
+    }
+
+   private:
+    SceneManager() {}
+    SceneManager(const SceneManager&) = delete;
     SceneManager& operator=(const SceneManager&) = delete;
 
     Scene* currentScene_;
-    std::unordered_map<std::string, Rc<Scene>> scenes_;
+    Scene* nextScene_;
+    std::unordered_map<std::string, Scene*> scenes_;
 };
 
 #endif  // RL_DA_ZERO_SRC_SCENES_SCENEMANAGER_H

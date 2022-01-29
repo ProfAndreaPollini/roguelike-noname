@@ -5,10 +5,11 @@
 #include "PlayScene.h"
 
 #include "GameCtx.h"
+#include "LogOverlay.h"
 #include "MapPrefabs.h"
 #include "MoveCommand.h"
+#include "SceneManager.h"
 #include "UIDebugOverlay.h"
-#include "LogOverlay.h"
 
 void PlayScene::handleInput() {
     auto map = GameCtx::getInstance().map();
@@ -68,10 +69,7 @@ void PlayScene::update() {
 
         heroRoom_ = map->queryRoom(hero->x(), hero->y());
         delete cmd_;
-        //            prefab.setTranslation(100, 100);
-        // prefab2.setTranslation(40,40);
 
-        //        map->updateUiInfo(hero->x(), hero->y(), drawUiInfo);
         waitUserInput_ = true;
     }
 }
@@ -100,9 +98,10 @@ PlayScene::PlayScene() : waitUserInput_(true) {
     auto debugUi = new UIDebugOverlay();
     overlays_.push_back(std::shared_ptr<UIDebugOverlay>(debugUi));
 
-    auto logUi = new LogOverlay({400,10 }, {400,400});
+    auto logUi = new LogOverlay({800, 10}, {400, 400});
     overlays_.push_back(std::shared_ptr<LogOverlay>(logUi));
 }
+
 void PlayScene::onLoad() {
     generateMap();
     auto hero = GameCtx::getInstance().hero();
@@ -146,6 +145,8 @@ void PlayScene::generateMap() {
     auto r = Room::createFromMapElement(currentPrefab);
     heroRoom_ = r;
     map->addRoom(r);
+
+    for (int i = 0; i < 20; i++) handleRoomCreate(map);
 }
 Command* PlayScene::handleUserInput() {
     if (IsKeyPressed(KEY_LEFT)) {
@@ -159,6 +160,10 @@ Command* PlayScene::handleUserInput() {
     }
     if (IsKeyPressed(KEY_DOWN)) {
         return new MoveCommand(0, 1);
+    }
+    if (IsKeyPressed(KEY_I)) {
+        SceneManager::getInstance().changeScene("INVENTORY");
+        return nullptr;
     }
     return nullptr;
 }

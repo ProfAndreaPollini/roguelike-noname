@@ -5,13 +5,12 @@
 #ifndef RL_DA_ZERO_SRC_SCENES_PLAYSCENE_H
 #define RL_DA_ZERO_SRC_SCENES_PLAYSCENE_H
 
-#include "raylib-cpp.hpp"
-
-#include "Scene.h"
-#include "Map.h"
-#include "util.h"
 #include "Command.h"
+#include "Map.h"
 #include "Overlay.h"
+#include "Scene.h"
+#include "raylib-cpp.hpp"
+#include "util.h"
 
 class PlayScene : public Scene {
    public:
@@ -19,20 +18,23 @@ class PlayScene : public Scene {
     void update() override;
     void render() override;
     void handleInput() override;
-//    ~PlayScene() override;
+
     void onLoad() override;
 
    private:
     void generateMap();
-    Command* handleUserInput();
+    auto handleUserInput() -> Command*;
+
+    void handleRoomCreate(Rc<Map> map) const;
+    void handleCameraMovement();
+
     bool waitUserInput_;
 
     raylib::Camera2D camera_;
 
     Command* cmd_ = nullptr;
     Room::RoomPtr heroRoom_;
-    void handleRoomCreate(Rc<Map> map) const;
-    void handleCameraMovement();
+
     std::vector<Rc<Overlay>> overlays_;
 };
 
