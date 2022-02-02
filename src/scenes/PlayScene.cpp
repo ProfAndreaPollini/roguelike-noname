@@ -6,9 +6,12 @@
 
 #include "GameCtx.h"
 #include "LogOverlay.h"
+#include "MapAlgorithms.h"
 #include "MapPrefabs.h"
 #include "MoveCommand.h"
+#include "Renderer.h"
 #include "SceneManager.h"
+#include "Services.h"
 #include "UIDebugOverlay.h"
 
 void PlayScene::handleInput() {
@@ -85,6 +88,9 @@ void PlayScene::render() {
     map->draw(heroRoom_);
     Renderer::getInstance().drawEntity({hero->x(), hero->y(), "@"});
     //        renderer_->drawRays(heroRoom, hero_);
+    if (display_astar_) {
+        Renderer::getInstance().drawAstar(astar_);
+    }
     EndMode2D();
     //    Renderer::getInstance().drawUi(drawUiInfo);
     for (const auto& overlay : overlays_) {
@@ -93,7 +99,7 @@ void PlayScene::render() {
     Renderer::getInstance().draw();
 }
 
-PlayScene::PlayScene() : waitUserInput_(true) {
+PlayScene::PlayScene() : waitUserInput_(true), alreadyStarted_(false) {
     //    raylib::Camera2D camera{};
     auto debugUi = new UIDebugOverlay();
     overlays_.push_back(std::shared_ptr<UIDebugOverlay>(debugUi));
@@ -103,7 +109,16 @@ PlayScene::PlayScene() : waitUserInput_(true) {
 }
 
 void PlayScene::onLoad() {
-    generateMap();
+    if (!alreadyStarted_) {
+        generateMap();
+        alreadyStarted_ = true;
+        //        auto roomconnections =
+        //            GameCtx::getInstance().map()->roomConnectionsBFS();
+        //        spdlog::info("Room connections: {}", roomconnections.size());
+        //        for (const auto& rc : roomconnections) {
+        //            spdlog::info("{}    ", rc);
+        //        }
+    }
     auto hero = GameCtx::getInstance().hero();
 
     camera_.offset = (Vector2){25 * Renderer::getInstance().getTileSize().x,
@@ -126,6 +141,8 @@ void PlayScene::generateMap() {
     prefab2.centerToConnectorPosition(0);
     prefab3.centerToConnectorPosition(0);
 
+    auto& ecs = Services::Ecs::ref();
+
     auto hero = GameCtx::getInstance().hero();
     auto map = GameCtx::getInstance().map();
 
@@ -146,8 +163,15 @@ void PlayScene::generateMap() {
     heroRoom_ = r;
     map->addRoom(r);
 
+    //    auto walkable = r->getWalkablePositions();
+
+    //    DijkstraMap dm(walkable);
+    //    dm.run(walkable[0]);
+    //    Astar astar(walkable);
+
     for (int i = 0; i < 20; i++) handleRoomCreate(map);
 }
+
 Command* PlayScene::handleUserInput() {
     if (IsKeyPressed(KEY_LEFT)) {
         return new MoveCommand(-1, 0);
@@ -162,8 +186,30 @@ Command* PlayScene::handleUserInput() {
         return new MoveCommand(0, 1);
     }
     if (IsKeyPressed(KEY_I)) {
-        SceneManager::getInstance().changeScene("INVENTORY");
+        auto& sceneManager = Services::SceneManager::ref();
+        sceneManager.changeScene("INVENTORY");
         return nullptr;
+    }
+
+    if (IsKeyPressed(KEY_F7)) {
+        if (display_astar_ == false) {
+            astar_.updateFromMap();
+            auto hero = GameCtx::getInstance().hero();
+
+            astar_.setup({hero->y(), hero->x()}, astar_.positions()[0]);
+            astar_.findPath();
+            display_astar_ = true;
+        }
+        // astar_->updateFromRoom(0, 0);
+        // display_astar_ = true;
+    }
+
+    if (IsKeyPressed(KEY_F8)) {
+        if (display_astar_ == true) {
+            display_astar_ = false;
+        }
+        // astar_->updateFromRoom(0, 0);
+        // display_astar_ = true;
     }
     return nullptr;
 }

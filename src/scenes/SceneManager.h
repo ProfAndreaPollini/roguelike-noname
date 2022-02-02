@@ -13,10 +13,10 @@
 
 class SceneManager {
    public:
-    static SceneManager& getInstance() {
-        static SceneManager instance;
-        return instance;
-    }
+    //    static SceneManager& getInstance() {
+    //        static SceneManager instance;
+    //        return instance;
+    //    }
 
     void addScene(const std::string& name, Scene* scene) {
         scenes_[name] = scene;
@@ -31,10 +31,8 @@ class SceneManager {
             currentScene_ = nextScene_;
             nextScene_ = nullptr;
             currentScene_->onLoad();
-
         }
-            return currentScene_;
-
+        return currentScene_;
     }
 
     Scene* getCurrentScene() { return currentScene_; }
@@ -45,11 +43,13 @@ class SceneManager {
         }
     }
 
+    SceneManager() {
+        currentScene_ = nullptr;
+        nextScene_ = nullptr;
+    }
+    //    SceneManager(const SceneManager&) = delete;
+    //    SceneManager& operator=(const SceneManager&) = delete;
    private:
-    SceneManager() {}
-    SceneManager(const SceneManager&) = delete;
-    SceneManager& operator=(const SceneManager&) = delete;
-
     Scene* currentScene_;
     Scene* nextScene_;
     std::unordered_map<std::string, Scene*> scenes_;

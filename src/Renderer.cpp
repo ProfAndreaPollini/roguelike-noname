@@ -3,6 +3,9 @@
 //
 
 #include "Renderer.h"
+
+#include "GameCtx.h"
+#include "MapAlgorithms.h"
 #include "MapPosition.h"
 
 void Renderer::prepare() const {
@@ -17,18 +20,99 @@ void Renderer::draw() const {
 }
 
 void Renderer::setup() {
-
-
     auto ptr = std::make_unique<raylib::Window>(
-        options.width * 20, options.height *20, options.title);
+        options.width * 20, options.height * 20, options.title);
     window_.swap(ptr);
 
-
     font_ = LoadFont("assets/fonts/roguelike-fonts-1.0/whitrabt.ttf");
-    fontSize_ =MeasureTextEx(font_, "A", 20, 0);
+    fontSize_ = MeasureTextEx(font_, "A", 20, 0);
     fontSize_.x = (int)fontSize_.x;
     fontSize_.y = (int)fontSize_.y;
+}
 
+void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
+                        int row) const {
+    //        prefab.setDirection(Direction::EAST);
+    const auto& roomsBFS = GameCtx::getInstance().map()->roomConnectionsBFS();
+    const auto& lastRoom = roomsBFS.back();
+
+    //      auto baricenter = room.baricenter();
+    for (auto& cell : room->cells()) {
+        auto isCurrent = room == heroRoom;
+
+        if (cell.coords().row > 0 && cell.coords().col > 0) {
+            if (cell.cell.type == CellType::CELL_WALL) {
+                drawRectangle(col + cell.coords().col, row + cell.coords().row,
+                              GRAY);
+
+                drawText("#", col + cell.coords().col, row + cell.coords().row,
+                         BLUE);
+            } else if (cell.cell.type == CellType::CELL_FLOOR) {
+                if (isCurrent) {
+                    drawRectangle(col + cell.coords().col,
+                                  row + cell.coords().row, DARKGRAY);
+                } else if (room ==
+                           GameCtx::getInstance().map()->getRoom(lastRoom)) {
+                    drawRectangle(col + cell.coords().col,
+                                  row + cell.coords().row, RED);
+                } else {
+                    drawRectangle(col + cell.coords().col,
+                                  row + cell.coords().row, DARKBROWN);
+                }
+                if (cell.cell.item != nullptr) {
+                    drawText("*", col + cell.coords().col,
+                             row + cell.coords().row, BLUE);
+                }
+                //                DrawText(".", std::abs(col +
+                //                cell.coords().col) * 14, std::abs(row +
+                //                cell.coords().row) * 20, 20, RED);
+            } else {
+                DrawText("?", std::abs(col + cell.coords().col) * 14,
+                         std::abs(row + cell.coords().row) * 20, 20, RED);
+                fmt::print("??? {} {}\n", cell.coords().col, cell.coords().row);
+            }
+        }
+    }
+
+    for (const auto& connector : room->connectors()) {
+        auto coords = connector.position();
+        auto direction = connector.direction();
+        if (coords.row > 0 && coords.col > 0) {
+            raylib::Color c;
+            switch (direction) {
+                case Direction::NORTH:
+                    c = PURPLE;
+                    drawRectangle(coords.col, coords.row /*-10*/, c);
+                    break;
+                case Direction::SOUTH:
+                    c = BLUE;
+                    drawRectangle(coords.col, coords.row /*+10*/, c);
+                    break;
+                case Direction::EAST:
+                    c = RED;
+                    drawRectangle(coords.col /*+10*/, coords.row, c);
+                    break;
+                case Direction::WEST:
+                    c = GREEN;
+                    drawRectangle(coords.col /*-10*/, coords.row, c);
+                    break;
+                default:
+                    c = BLACK;
+                    break;
+            }
+
+            drawRectangle(col + coords.col, row + coords.row, c);
+            drawText(">", (col + coords.col), (row + coords.row), BLACK);
+        }
+    }
+}
+void Renderer::drawAstar(AStar& astar) const {
+    for (auto& cell : astar.positions()) {
+        drawRectangle(cell.col, cell.row, RED);
+    }
+    for (auto& cell : astar.getPath()) {
+        drawRectangle(cell.col, cell.row, BLUE);
+    }
 }
 
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
@@ -131,7 +215,7 @@ void DDAWallIntersection(float posX, float posY, float endX, float endY,
     double sideDistY;
 
     double deltaDistX = (rayDirX == 0) ? 1e30 : std::abs(1 / rayDirX);
-    double deltaDistY = (rayDirY == 0) ? 1e30 :  std::abs(1 / rayDirY);
+    double deltaDistY = (rayDirY == 0) ? 1e30 : std::abs(1 / rayDirY);
 
     double perpWallDist;
 
@@ -174,7 +258,8 @@ void DDAWallIntersection(float posX, float posY, float endX, float endY,
         if (mapX == cellCol && mapY == cellRow) {
             hit = true;
         }
-        fmt::print("{} {} {} {} {} {}\n", mapX, mapY, cellCol, cellRow,sideDistX,sideDistY);
+        fmt::print("{} {} {} {} {} {}\n", mapX, mapY, cellCol, cellRow,
+                   sideDistX, sideDistY);
     }
 
     if (side == 0)

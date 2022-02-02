@@ -10,7 +10,7 @@ add_subdirectory(items)
 add_subdirectory(ui)
 add_subdirectory(scenes)
 add_subdirectory(events)
-
+add_subdirectory(systems)
 
 target_include_directories(rl_da_zero PRIVATE .)
 

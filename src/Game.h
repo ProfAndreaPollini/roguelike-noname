@@ -22,6 +22,7 @@ using json = nlohmann::json;
 #include "PlayerTurn.h"
 #include "Renderer.h"
 #include "SceneManager.h"
+#include "Services.h"
 #include "scenes/Scene.h"
 #include "util.h"
 #include "world/Map.h"
@@ -37,13 +38,7 @@ struct GameOptions {
 
 class Game {
    public:
-    Game() {
-        //        GameCtx::getInstance().hero(&hero_);
-        SceneManager::getInstance().addScene("INTRO", new IntroScene());
-        SceneManager::getInstance().addScene("PLAY", new PlayScene());
-        SceneManager::getInstance().addScene("INVENTORY", new InventoryScene());
-        SceneManager::getInstance().changeScene("INTRO");
-    }
+    Game();
     void setup(const GameOptions& options = GameOptions());
     void run();
 

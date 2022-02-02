@@ -87,6 +87,7 @@ endif()
 
 add_subdirectory(vendor/fmt)
 add_subdirectory(vendor/json)
+add_subdirectory(vendor/entt)
 
 
 #find_package(nlohmann_json 3.10.5 REQUIRED)
@@ -103,6 +104,7 @@ target_link_libraries(rl_da_zero PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(rl_da_zero PRIVATE spdlog::spdlog_header_only)
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(rl_da_zero PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
+target_link_libraries(rl_da_zero PRIVATE EnTT::EnTT)
 #target_link_libraries(rl_da_zero PRIVATE  project_warnings) # connect project_options to myprogram
 
 

@@ -5,22 +5,19 @@
 #ifndef RL_DA_ZERO_HERO_H
 #define RL_DA_ZERO_HERO_H
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "Entity.h"
-#include "fmt/core.h"
 #include "Item.h"
+#include "entt/entity/entity.hpp"
+#include "fmt/core.h"
 
 class Hero : public Entity {
-public:
+   public:
+    Hero();
 
-
-    Hero() : Entity{15,10} {}
-
-    void draw() {
-        fmt::print("Hero\n");
-    }
+    void draw() { fmt::print("Hero\n"); }
 
     void moveLeft() {
         fmt::print("Hero move left\n");
@@ -42,18 +39,16 @@ public:
         move(0, 14);
     }
 
-     void pickUp(Item* item) override  {
+    void pickUp(Item* item) override {
         fmt::print("Hero pick up item\n");
         inventoryItems.emplace_back(item);
     }
 
-    std::vector<Item*> getInventory() {
-        return inventoryItems;
-    }
+    std::vector<Item*> getInventory() { return inventoryItems; }
 
    private:
     std::vector<Item*> inventoryItems;
+    entt::entity entity;
 };
 
-
-#endif //RL_DA_ZERO_HERO_H
+#endif  // RL_DA_ZERO_HERO_H

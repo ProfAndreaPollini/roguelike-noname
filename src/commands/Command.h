@@ -7,13 +7,13 @@
 
 #include "Entity.h"
 #include "Map.h"
+#include "entt/entity/entity.hpp"
 
 class Command {
-public:
-  virtual ~Command() {}
-  virtual void execute(Entity* entity, Map& map) = 0;
+   public:
+    virtual ~Command() {}
+    virtual void execute(Entity* entity, Map& map) = 0;
+    virtual void execute(entt::entity& entity) = 0;
 };
 
-
-
-#endif //RL_DA_ZERO_COMMAND_H
+#endif  // RL_DA_ZERO_COMMAND_H

@@ -9,16 +9,16 @@
 #include <cmath>
 #include <memory>
 
+//#include "GameCtx.h"
+
 #include "Hero.h"
+#include "MapAlgorithms.h"
 #include "MapElement.h"
+#include "MapPosition.h"
 #include "MapPrefab.h"
 #include "Room.h"
-#include "raylib-cpp.hpp"
-#include "MapPosition.h"
-
-
 #include "extras/raygui.h"
-
+#include "raylib-cpp.hpp"
 
 std::vector<MapPosition> Bresenham(int x1, int y1, int const x2, int const y2);
 
@@ -82,16 +82,14 @@ class Renderer {
         return instance;
     }
 
-    ~Renderer() {
-        UnloadFont(font_ );
-    }
+    ~Renderer() { UnloadFont(font_); }
 
     void setup();
     void prepare() const;
     void draw() const;
 
-    [[maybe_unused]]  void drawEntity(DrawEntityInfo drawInfo) {
-        drawText(drawInfo.c, drawInfo.x , drawInfo.y ,  RED);
+    [[maybe_unused]] void drawEntity(DrawEntityInfo drawInfo) {
+        drawText(drawInfo.c, drawInfo.x, drawInfo.y, RED);
     }
 
     void drawText(const char* text, float x, float y,
@@ -129,8 +127,7 @@ class Renderer {
         DrawCircle(x * fontSize_.x, y * fontSize_.y, r, c);
     }
 
-    [[maybe_unused]]  void drawRays(Room::RoomPtr room,
-                                          const Hero& hero) {
+    [[maybe_unused]] void drawRays(Room::RoomPtr room, const Hero& hero) {
         // x =x0+t*x_d
         // y =y0+t*y_d
         float startX = hero.x();
@@ -166,7 +163,7 @@ class Renderer {
                     //                        cell.coords().col,
                     //                                   cell.coords().row);
                     if (p == cell.coords()) {
-                        drawCircle(p.col , p.row , 10, GREEN);
+                        drawCircle(p.col, p.row, 10, GREEN);
                         //                        DDAWallIntersection(startX,
                         //                        startY, endX, endY,
                         //                                            cell.coords().col,
@@ -175,10 +172,8 @@ class Renderer {
                         //                        fmt::print("{} {}\t", dist,
                         //                        angle);
                     } else
-                        drawRectangle(p.col , p.row , RED);
+                        drawRectangle(p.col, p.row, RED);
                 }
-
-
             }
         }
     }
@@ -188,15 +183,18 @@ class Renderer {
     //        getLineIntersection(hero.x(),hero.y(),hero.x(),hero.y()-50,room->x,room->y,room->x+room->width,room->y,xEnd,yEnd);
     //        DrawLine(drawInfo.x*14, drawInfo.y*20, drawInfo.x*14, 0, RED);
 
-//    [[maybe_unused]] static void drawCell(const DrawCellInfo& drawInfo) {
-//        DrawText(drawInfo.feature, drawInfo.x * 14, drawInfo.y * 20, 20, RED);
-//        DrawText(drawInfo.item, drawInfo.x * 14, drawInfo.y * 20, 20, GREEN);
-//    }
+    //    [[maybe_unused]] static void drawCell(const DrawCellInfo& drawInfo) {
+    //        DrawText(drawInfo.feature, drawInfo.x * 14, drawInfo.y * 20, 20,
+    //        RED); DrawText(drawInfo.item, drawInfo.x * 14, drawInfo.y * 20,
+    //        20, GREEN);
+    //    }
 
-//    [[maybe_unused]] static void drawConnection(const DrawCellInfo& drawInfo) {
-//        DrawText(drawInfo.feature, drawInfo.x * 14, drawInfo.y * 20, 20, BLUE);
-//        DrawText(drawInfo.item, drawInfo.x * 14, drawInfo.y * 20, 20, BLUE);
-//    }
+    //    [[maybe_unused]] static void drawConnection(const DrawCellInfo&
+    //    drawInfo) {
+    //        DrawText(drawInfo.feature, drawInfo.x * 14, drawInfo.y * 20, 20,
+    //        BLUE); DrawText(drawInfo.item, drawInfo.x * 14, drawInfo.y * 20,
+    //        20, BLUE);
+    //    }
 
     //    static void drawRoom( Room& room) {
     //        for (auto& cell : room.cells()) {
@@ -205,166 +203,90 @@ class Renderer {
     //            std::abs(elementCell.coords.row) * 20, 20, BLUE);
     //        }
     //    }
-//    void drawPrefab(MapPrefab& prefab, int col, int row) {
-//        //        prefab.setDirection(Direction::EAST);
-//
-//        auto baricenter = prefab.baricenter();
-//        for (auto& cell : prefab.cells()) {
-//            //            auto x = col + cell.col - baricenter.col;
-//            //            auto y = row + cell.row - baricenter.row;
-//            //            fmt::print("{} {}\n", x, y);
-//            if (cell.coords.row > 0 && cell.coords.col > 0) {
-//                DrawText("#", std::abs(col + cell.coords.col) * 14,
-//                         std::abs(row + cell.coords.row) * 20, 20, BLUE);
-//            }
-//        }
-//
-//        for (const auto& connector : prefab.connectors()) {
-//            auto coords = connector.position();
-//            auto direction = connector.direction();
-//            if (coords.row > 0 && coords.col > 0) {
-//                raylib::Color c;
-//                switch (direction) {
-//                    case Direction::NORTH:
-//                        c = PURPLE;
-//                        DrawRectangle(coords.col * 14, coords.row * 20 - 10, 14,
-//                                      20, c);
-//                        break;
-//                    case Direction::SOUTH:
-//                        c = BLUE;
-//                        DrawRectangle(coords.col * 14, coords.row * 20 + 10, 14,
-//                                      20, c);
-//                        break;
-//                    case Direction::EAST:
-//                        c = RED;
-//                        DrawRectangle(coords.col * 14 + 10, coords.row * 20, 14,
-//                                      20, c);
-//                        break;
-//                    case Direction::WEST:
-//                        c = GREEN;
-//                        DrawRectangle(coords.col * 14 - 10, coords.row * 20, 14,
-//                                      20, c);
-//                        break;
-//                    default:
-//                        c = BLACK;
-//                        break;
-//                }
-//
-//                DrawRectangle(col * 14 + coords.col * 14,
-//                              row * 20 + coords.row * 20, 14, 20, c);
-//                drawText(">", (col + coords.col), (row + coords.row), BLACK);
-//            }
-//        }
-//
-//        auto selectedCoords = prefab.selectedConnectorCoords();
-//        if (selectedCoords.row > 0 && selectedCoords.col > 0) {
-//            DrawRectangle(col * 14 + selectedCoords.col * 14,
-//                          row * 20 + selectedCoords.row * 20, 14, 20, YELLOW);
-//        }
-//    }
+    //    void drawPrefab(MapPrefab& prefab, int col, int row) {
+    //        //        prefab.setDirection(Direction::EAST);
+    //
+    //        auto baricenter = prefab.baricenter();
+    //        for (auto& cell : prefab.cells()) {
+    //            //            auto x = col + cell.col - baricenter.col;
+    //            //            auto y = row + cell.row - baricenter.row;
+    //            //            fmt::print("{} {}\n", x, y);
+    //            if (cell.coords.row > 0 && cell.coords.col > 0) {
+    //                DrawText("#", std::abs(col + cell.coords.col) * 14,
+    //                         std::abs(row + cell.coords.row) * 20, 20, BLUE);
+    //            }
+    //        }
+    //
+    //        for (const auto& connector : prefab.connectors()) {
+    //            auto coords = connector.position();
+    //            auto direction = connector.direction();
+    //            if (coords.row > 0 && coords.col > 0) {
+    //                raylib::Color c;
+    //                switch (direction) {
+    //                    case Direction::NORTH:
+    //                        c = PURPLE;
+    //                        DrawRectangle(coords.col * 14, coords.row * 20 -
+    //                        10, 14,
+    //                                      20, c);
+    //                        break;
+    //                    case Direction::SOUTH:
+    //                        c = BLUE;
+    //                        DrawRectangle(coords.col * 14, coords.row * 20 +
+    //                        10, 14,
+    //                                      20, c);
+    //                        break;
+    //                    case Direction::EAST:
+    //                        c = RED;
+    //                        DrawRectangle(coords.col * 14 + 10, coords.row *
+    //                        20, 14,
+    //                                      20, c);
+    //                        break;
+    //                    case Direction::WEST:
+    //                        c = GREEN;
+    //                        DrawRectangle(coords.col * 14 - 10, coords.row *
+    //                        20, 14,
+    //                                      20, c);
+    //                        break;
+    //                    default:
+    //                        c = BLACK;
+    //                        break;
+    //                }
+    //
+    //                DrawRectangle(col * 14 + coords.col * 14,
+    //                              row * 20 + coords.row * 20, 14, 20, c);
+    //                drawText(">", (col + coords.col), (row + coords.row),
+    //                BLACK);
+    //            }
+    //        }
+    //
+    //        auto selectedCoords = prefab.selectedConnectorCoords();
+    //        if (selectedCoords.row > 0 && selectedCoords.col > 0) {
+    //            DrawRectangle(col * 14 + selectedCoords.col * 14,
+    //                          row * 20 + selectedCoords.row * 20, 14, 20,
+    //                          YELLOW);
+    //        }
+    //    }
+
+    void drawAstar(AStar& astar) const;
 
     void drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
-                  int row) {
-        //        prefab.setDirection(Direction::EAST);
+                  int row) const;
 
-        //      auto baricenter = room.baricenter();
-        for (auto& cell : room->cells()) {
-            auto isCurrent = room == heroRoom;
-
-            if (cell.coords().row > 0 && cell.coords().col > 0) {
-                if (cell.cell.type == CellType::CELL_WALL) {
-                    //                    DrawRectangle(col * 14 +
-                    //                    cell.coords().col * 14,
-                    //                                  row * 20 +
-                    //                                  cell.coords().row * 20,
-                    //                                  14, 20, GRAY);
-                    drawRectangle(col + cell.coords().col,
-                                  row + cell.coords().row, GRAY);
-
-//                    raylib::Vector2 pos;
-//                    pos.x = std::fabs(col + cell.coords().col) * 14;
-//                    pos.y = std::fabs(row + cell.coords().row) * 20;
-//                    raylib::DrawTextEx(font_, "#", pos, 14, (float)0, BLUE);
-                    drawText("#", col + cell.coords().col, row + cell.coords().row,
-                             BLUE);
-                } else if (cell.cell.type == CellType::CELL_FLOOR) {
-                    if (isCurrent) {
-                        drawRectangle(col + cell.coords().col,
-                                      row + cell.coords().row, DARKGRAY);
-                    } else {
-                        drawRectangle(col + cell.coords().col,
-                                      row + cell.coords().row, DARKBROWN);
-
-//                        DrawRectangle(col * 14 + cell.coords().col * 14,
-//                                      row * 20 + cell.coords().row * 20, 14, 20,
-//                                      BLUE);
-                    }
-                    if(cell.cell.item != nullptr) {
-                        drawText("*", col + cell.coords().col,
-                                 row + cell.coords().row, BLUE);
-                    }
-                    //                DrawText(".", std::abs(col +
-                    //                cell.coords().col) * 14, std::abs(row +
-                    //                cell.coords().row) * 20, 20, RED);
-                } else {
-                    DrawText("?", std::abs(col + cell.coords().col) * 14,
-                             std::abs(row + cell.coords().row) * 20, 20, RED);
-                    fmt::print("??? {} {}\n", cell.coords().col,
-                               cell.coords().row);
-                }
-            }
-        }
-
-        for (const auto& connector : room->connectors()) {
-            auto coords = connector.position();
-            auto direction = connector.direction();
-            if (coords.row > 0 && coords.col > 0) {
-                raylib::Color c;
-                switch (direction) {
-                    case Direction::NORTH:
-                        c = PURPLE;
-                        drawRectangle(coords.col , coords.row /*-10*/,  c);
-                        break;
-                    case Direction::SOUTH:
-                        c = BLUE;
-                        drawRectangle(coords.col , coords.row /*+10*/,  c);
-                        break;
-                    case Direction::EAST:
-                        c = RED;
-                        drawRectangle(coords.col/*+10*/ , coords.row ,  c);
-                        break;
-                    case Direction::WEST:
-                        c = GREEN;
-                        drawRectangle(coords.col/*-10*/ , coords.row ,  c);
-                        break;
-                    default:
-                        c = BLACK;
-                        break;
-                }
-
-                drawRectangle(col  + coords.col ,
-                              row  + coords.row , c);
-                drawText(">", (col + coords.col) , (row + coords.row) , BLACK);
-            }
-        }
-    }
-
-    [[maybe_unused]]  void drawUi(const DrawUIInfo& uiInfo) {
+    [[maybe_unused]] void drawUi(const DrawUIInfo& uiInfo) {
         int y = 10;
         int x = 100;
 
         int iy = 4;
         int ix = 4;
 
-
         for (const auto& item : uiInfo.inventory) {
             drawText(item.c_str(), ix, iy, WHITE);
             DrawRectangle(ix, iy, 30, 30, WHITE);
-            iy ++;
+            iy++;
         }
 
         for (const auto& message : uiInfo.messages) {
-            drawText(message.c_str(), x, y,  BLACK);
+            drawText(message.c_str(), x, y, BLACK);
             x += 20;
         }
     }

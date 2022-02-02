@@ -118,6 +118,16 @@ class Room {
         return false;
     }
 
+    auto getWalkablePositions() const -> std::vector<MapPosition> {
+        std::vector<MapPosition> positions;
+        for (const auto& cell : cells_) {
+            if (cell.cell.isWalkable()) {
+                positions.push_back(cell.coords());
+            }
+        }
+        return positions;
+    }
+
     Item* getItemAt(int col, int row) {
         for (auto& cell : cells_) {
             if (cell.coords().col == col && cell.coords().row == row) {

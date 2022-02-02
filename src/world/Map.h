@@ -5,12 +5,13 @@
 #ifndef RL_DA_ZERO_MAP_H
 #define RL_DA_ZERO_MAP_H
 
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <memory>
 
 #include "Cell.h"
 #include "Graph.h"
-#include "Renderer.h"
 #include "Room.h"
 #include "SwordItem.h"
 
@@ -20,7 +21,8 @@ class Map {
 
     ~Map() = default;
 
-    Map(int width, int height) : width_(width), height_(height) {}
+    Map() = default;
+    //    Map(int width, int height) : width_(width), height_(height) {}
 
     [[nodiscard]] auto overlaps(std::shared_ptr<Room> room) const -> bool {
         auto rooms = rooms_.elements();
@@ -54,11 +56,7 @@ class Map {
         }
     }
 
-    void draw(const RoomPtr& heroRoom) const {
-        for (const auto& room : rooms_.elements()) {
-            Renderer::getInstance().drawRoom(room, heroRoom, 0, 0);
-        }
-    }
+    void draw(const RoomPtr& heroRoom) const;
 
     [[nodiscard]] auto isWalkable(int x, int y) const -> bool {
         for (const auto& room : rooms_.elements()) {
@@ -172,6 +170,8 @@ class Map {
         return rooms_.elements().size();
     }
 
+    auto getRooms() const -> const std::vector<RoomPtr>;
+
     /// Returns the number of rooms with at least one connection
     [[nodiscard]] auto roomWithConnectionCount() const -> int {
         int count = 0;
@@ -183,15 +183,16 @@ class Map {
         return count;
     }
 
-    void updateUiInfo(int x, int y, DrawUIInfo& info) const {
-        //        map_[y * width_ + x].updateUiInfo(info);
+    std::vector<int> roomConnectionsBFS() {
+        std::vector<int> roomsBFS = rooms_.BFS();
+        return roomsBFS;
     }
 
    private:
-    int width_;
-    int height_;
+    //    int width_;
+    //    int height_;
 
-    Graph<Room> rooms_;
+    Graph<std::shared_ptr<Room>> rooms_;
 };
 
 #endif  // RL_DA_ZERO_MAP_H

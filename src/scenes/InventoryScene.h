@@ -12,11 +12,7 @@
 
 class InventoryScene : public Scene {
    public:
-    void handleInput() override {
-        if (IsKeyPressed(KEY_ESCAPE)) {
-            SceneManager::getInstance().changeScene("PLAY");
-        }
-    }
+    void handleInput() override;
     void update() override {}
     void render() override {
         Renderer::getInstance().prepare();

@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "Hero.h"
 #include "Map.h"
 #include "util.h"
 
@@ -34,7 +35,7 @@ class GameCtx {
    private:
     // singleton
     GameCtx() {
-        map_.reset(new Map(800, 600));
+        map_.reset(new Map());
         //        renderer_.reset(new Renderer());
         hero_.reset(new Hero());
     }
