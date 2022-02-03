@@ -7,6 +7,7 @@
 #include "GameCtx.h"
 #include "MapAlgorithms.h"
 #include "MapPosition.h"
+#include "Services.h"
 
 void Renderer::prepare() const {
     BeginDrawing();
@@ -20,8 +21,8 @@ void Renderer::draw() const {
 }
 
 void Renderer::setup() {
-    auto ptr = std::make_unique<raylib::Window>(
-        options.width * 20, options.height * 20, options.title);
+    auto ptr = std::make_unique<raylib::Window>(options.width, options.height,
+                                                options.title);
     window_.swap(ptr);
 
     font_ = LoadFont("assets/fonts/roguelike-fonts-1.0/whitrabt.ttf");
@@ -33,7 +34,10 @@ void Renderer::setup() {
 void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
                         int row) const {
     //        prefab.setDirection(Direction::EAST);
-    const auto& roomsBFS = GameCtx::getInstance().map()->roomConnectionsBFS();
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
+    const auto& roomsBFS = map.roomConnectionsBFS();
     const auto& lastRoom = roomsBFS.back();
 
     //      auto baricenter = room.baricenter();
@@ -51,8 +55,7 @@ void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
                 if (isCurrent) {
                     drawRectangle(col + cell.coords().col,
                                   row + cell.coords().row, DARKGRAY);
-                } else if (room ==
-                           GameCtx::getInstance().map()->getRoom(lastRoom)) {
+                } else if (room == map.getRoom(lastRoom)) {
                     drawRectangle(col + cell.coords().col,
                                   row + cell.coords().row, RED);
                 } else {

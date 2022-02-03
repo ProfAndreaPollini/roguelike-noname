@@ -18,19 +18,19 @@ class GameCtx {
         return instance;
     }
 
-    void map(Map* map) { map_.reset(std::move(map)); }
+    //    void map(Map* map) { map_.reset(std::move(map)); }
 
     // map
-    auto& map() { return map_; }
-
-    const auto& map() const { return map_; }
+    //    auto& map() { return map_; }
+    //
+    //    const auto& map() const { return map_; }
 
     // hero
-    auto& hero() { return hero_; }
-
-    const auto& hero() const { return hero_; }
-
-    void hero(Hero* hero) { hero_.reset(std::move(hero)); }
+    //    auto& hero() { return hero_; }
+    //
+    //    const auto& hero() const { return hero_; }
+    //
+    //    void hero(Hero* hero) { hero_.reset(std::move(hero)); }
 
    private:
     // singleton

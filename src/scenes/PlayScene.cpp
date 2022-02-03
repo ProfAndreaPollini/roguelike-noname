@@ -4,7 +4,10 @@
 
 #include "PlayScene.h"
 
+#include "CameraSystem.h"
+#include "Game.h"
 #include "GameCtx.h"
+#include "HeroSystem.h"
 #include "LogOverlay.h"
 #include "MapAlgorithms.h"
 #include "MapPrefabs.h"
@@ -15,7 +18,10 @@
 #include "UIDebugOverlay.h"
 
 void PlayScene::handleInput() {
-    auto map = GameCtx::getInstance().map();
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
+    //    auto map = GameCtx::getInstance().map();
 
     if (waitUserInput_) {
         cmd_ = handleUserInput();
@@ -32,7 +38,7 @@ void PlayScene::handleInput() {
     handleCameraMovement();
 }
 
-void PlayScene::handleRoomCreate(Rc<Map> map) const {
+void PlayScene::handleRoomCreate(Map& map) const {
     int attempts = 0;
     auto otherPrefabIndex = 0;
     MapPrefab otherPrefab;
@@ -47,11 +53,11 @@ void PlayScene::handleRoomCreate(Rc<Map> map) const {
             otherPrefab = mapElements[otherPrefabIndex];
         }
         auto roomIdx = Rng::getInstance().getRandomInt(
-            0, map->roomWithConnectionCount() - 1);
-        auto added = map->addPrefabTo(roomIdx, otherPrefab);
+            0, map.roomWithConnectionCount() - 1);
+        auto added = map.addPrefabTo(roomIdx, otherPrefab);
         if (added) {
             fmt::print("Added prefab to room {}\n", roomIdx);
-            fmt::print("rooms = {}\n", map->roomCount());
+            fmt::print("rooms = {}\n", map.roomCount());
             attempts = 0;
             break;
         } else {
@@ -63,15 +69,23 @@ void PlayScene::handleRoomCreate(Rc<Map> map) const {
 
 void PlayScene::update() {
     if (!waitUserInput_) {
-        auto hero = GameCtx::getInstance().hero();
-        auto map = GameCtx::getInstance().map();
-        //        drawUiInfo.messages.clear();
-        cmd_->execute(hero.get(), *map);
-        camera_.target.x = hero->x() * Renderer::getInstance().getTileSize().x;
-        camera_.target.y = hero->y() * Renderer::getInstance().getTileSize().y;
+        HeroSystem::updateHero();
+        //        auto hero = GameCtx::getInstance().hero();
+        auto& ecs = Services::Ecs::ref();
 
-        heroRoom_ = map->queryRoom(hero->x(), hero->y());
-        delete cmd_;
+        auto& map = ecs.registry.ctx().at<Map>();
+
+        //        auto map = GameCtx::getInstance().map();
+        //        drawUiInfo.messages.clear();
+        //        cmd_->execute(hero.get(), map);
+        auto hero = ecs.registry.view<HeroTag>().front();
+        const auto& position = ecs.registry.get<Position>(hero);
+
+        camera_.target.x = position.x * Renderer::getInstance().getTileSize().x;
+        camera_.target.y = position.y * Renderer::getInstance().getTileSize().y;
+
+        heroRoom_ = map.queryRoom(position.x, position.y);
+        //        delete cmd_;
 
         waitUserInput_ = true;
     }
@@ -80,13 +94,22 @@ void PlayScene::update() {
 void PlayScene::render() {
     Renderer::getInstance().prepare();
 
-    auto hero = GameCtx::getInstance().hero();
-    auto map = GameCtx::getInstance().map();
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
+
+    //        auto map = GameCtx::getInstance().map();
+    //        drawUiInfo.messages.clear();
+    //        cmd_->execute(hero.get(), map);
+    auto hero = ecs.registry.view<HeroTag>().front();
+    const auto& position = ecs.registry.get<Position>(hero);
+
+    //    auto map = GameCtx::getInstance().map();
 
     BeginMode2D(camera_);
 
-    map->draw(heroRoom_);
-    Renderer::getInstance().drawEntity({hero->x(), hero->y(), "@"});
+    map.draw(heroRoom_);
+    Renderer::getInstance().drawEntity({position.x, position.y, "@"});
     //        renderer_->drawRays(heroRoom, hero_);
     if (display_astar_) {
         Renderer::getInstance().drawAstar(astar_);
@@ -101,10 +124,19 @@ void PlayScene::render() {
 
 PlayScene::PlayScene() : waitUserInput_(true), alreadyStarted_(false) {
     //    raylib::Camera2D camera{};
+
+    // create hero
+    Hero::createHero();
+
+    auto& ecs = Services::Ecs::ref();
+
+    auto& options = ecs.registry.ctx().at<GameOptions>();
+
     auto debugUi = new UIDebugOverlay();
     overlays_.push_back(std::shared_ptr<UIDebugOverlay>(debugUi));
 
-    auto logUi = new LogOverlay({800, 10}, {400, 400});
+    auto logUi = new LogOverlay({(float)options.width - 300, 0},
+                                {300, (float)options.height});
     overlays_.push_back(std::shared_ptr<LogOverlay>(logUi));
 }
 
@@ -119,12 +151,22 @@ void PlayScene::onLoad() {
         //            spdlog::info("{}    ", rc);
         //        }
     }
-    auto hero = GameCtx::getInstance().hero();
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
+
+    //        auto map = GameCtx::getInstance().map();
+    //        drawUiInfo.messages.clear();
+    //        cmd_->execute(hero.get(), map);
+    auto hero = ecs.registry.view<HeroTag>().front();
+    const auto& position = ecs.registry.get<Position>(hero);
+
+    //    auto hero = GameCtx::getInstance().hero();
 
     camera_.offset = (Vector2){25 * Renderer::getInstance().getTileSize().x,
                                10 * Renderer::getInstance().getTileSize().y};
-    camera_.target.x = hero->x() * Renderer::getInstance().getTileSize().x;
-    camera_.target.y = hero->y() * Renderer::getInstance().getTileSize().y;
+    camera_.target.x = position.x * Renderer::getInstance().getTileSize().x;
+    camera_.target.y = position.y * Renderer::getInstance().getTileSize().y;
     camera_.rotation = 0.0f;
     camera_.zoom = 1.0f;
 }
@@ -143,8 +185,9 @@ void PlayScene::generateMap() {
 
     auto& ecs = Services::Ecs::ref();
 
-    auto hero = GameCtx::getInstance().hero();
-    auto map = GameCtx::getInstance().map();
+    auto hero = ecs.registry.view<HeroTag>().front();
+    auto& position = ecs.registry.get<Position>(hero);
+    auto& map = ecs.registry.ctx().at<Map>();
 
     auto rooms = 0;
     auto attempts = 0;
@@ -153,7 +196,14 @@ void PlayScene::generateMap() {
     auto currentPrefab = mapElements[currentPrefabIndex];
     currentPrefab.setTranslation(100, 100);
 
-    hero->set(currentPrefab.baricenter().col, currentPrefab.baricenter().row);
+    //    hero->set(currentPrefab.baricenter().col,
+    //    currentPrefab.baricenter().row);
+    position.x = currentPrefab.baricenter().col;
+    position.y = currentPrefab.baricenter().row;
+
+    CameraSystem::createCamera(position.x, position.y, 50, 20);
+    CameraSystem::updateViewport();
+
     std::shared_ptr<Room> currentRoom =
         Room::createFromMapElement(currentPrefab);
 
@@ -161,7 +211,7 @@ void PlayScene::generateMap() {
 
     auto r = Room::createFromMapElement(currentPrefab);
     heroRoom_ = r;
-    map->addRoom(r);
+    map.addRoom(r);
 
     //    auto walkable = r->getWalkablePositions();
 
@@ -172,31 +222,45 @@ void PlayScene::generateMap() {
     for (int i = 0; i < 20; i++) handleRoomCreate(map);
 }
 
-Command* PlayScene::handleUserInput() {
+Rc<Command> PlayScene::handleUserInput() {
+    Rc<Command> cmd;
     if (IsKeyPressed(KEY_LEFT)) {
-        return new MoveCommand(-1, 0);
+        cmd.reset(new MoveCommand(-1, 0));
     }
     if (IsKeyPressed(KEY_RIGHT)) {
-        return new MoveCommand(1, 0);
+        cmd.reset(new MoveCommand(1, 0));
     }
     if (IsKeyPressed(KEY_UP)) {
-        return new MoveCommand(0, -1);
+        cmd.reset(new MoveCommand(0, -1));
     }
     if (IsKeyPressed(KEY_DOWN)) {
-        return new MoveCommand(0, 1);
+        cmd.reset(new MoveCommand(0, 1));
     }
     if (IsKeyPressed(KEY_I)) {
         auto& sceneManager = Services::SceneManager::ref();
         sceneManager.changeScene("INVENTORY");
         return nullptr;
     }
+    auto& ecs = Services::Ecs::ref();
+
+    auto hero = ecs.registry.view<HeroTag>().front();
+
+    auto& actions = ecs.registry.get<Actions>(hero);
+    if (cmd) {
+        actions.push_back(cmd);
+    }
 
     if (IsKeyPressed(KEY_F7)) {
         if (display_astar_ == false) {
             astar_.updateFromMap();
-            auto hero = GameCtx::getInstance().hero();
 
-            astar_.setup({hero->y(), hero->x()}, astar_.positions()[0]);
+            auto& ecs = Services::Ecs::ref();
+
+            auto hero = ecs.registry.view<HeroTag>().front();
+            auto& position = ecs.registry.get<Position>(hero);
+            //            auto hero = GameCtx::getInstance().hero();
+
+            astar_.setup({position.y, position.x}, astar_.positions()[0]);
             astar_.findPath();
             display_astar_ = true;
         }
@@ -211,7 +275,7 @@ Command* PlayScene::handleUserInput() {
         // astar_->updateFromRoom(0, 0);
         // display_astar_ = true;
     }
-    return nullptr;
+    return cmd;
 }
 
 void PlayScene::handleCameraMovement() {

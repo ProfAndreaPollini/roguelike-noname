@@ -13,10 +13,10 @@
 
 class EventStore {
    public:
-    static EventStore& getInstance() {
-        static EventStore instance;
-        return instance;
-    }
+    //    static EventStore& getInstance() {
+    //        static EventStore instance;
+    //        return instance;
+    //    }
 
     virtual ~EventStore() = default;
 
@@ -30,12 +30,22 @@ class EventStore {
     //    void store(const std::vector<Event>& events){events_.;}
     const std::vector<Rc<Event>>& events() const { return events_; };
 
-   private:
-    EventStore() = default;
-    EventStore(const EventStore&) = delete;
-    EventStore& operator=(const EventStore&) = delete;
-    EventStore(EventStore&&) = delete;
+    void clear() { events_.clear(); }
+    //    void remove(const Event& event) {
+    //        auto it = std::find_if(events_.begin(), events_.end(),
+    //                               [&event](const Rc<Event>& e) { return
+    //                               e->id() == event.id(); });
+    //        if (it != events_.end()) {
+    //            events_.erase(it);
+    //        }
+    //    }
 
+
+    EventStore() = default;
+//    EventStore(const EventStore&) = delete;
+//    EventStore& operator=(const EventStore&) = delete;
+//    EventStore(EventStore&&) = delete;
+   private:
     std::vector<Rc<Event>> events_;
 };
 

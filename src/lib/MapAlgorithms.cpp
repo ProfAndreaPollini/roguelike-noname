@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "GameCtx.h"
+#include "Services.h"
 #include "spdlog/stopwatch.h"
 void AStar::findPath() {
     //    std::vector<MapPosition> openSet;
@@ -118,8 +119,11 @@ void AStar::reconstructPath(
 }
 
 void MapAlgorithm::updateFromMap() {
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
     if (positions_.size() > 0) return;
-    for (const auto& room : GameCtx::getInstance().map()->getRooms()) {
+    for (const auto& room : map.getRooms()) {
         for (const auto& walkablePosition : room->getWalkablePositions()) {
             positions_.push_back(walkablePosition);
             //            lattice_.addElement(
@@ -141,11 +145,12 @@ void MapAlgorithm::updateFromMap() {
     }
 }
 [[maybe_unused]] void MapAlgorithm::updateFromRoom(int x, int y) {
+    auto& ecs = Services::Ecs::ref();
+
+    auto& map = ecs.registry.ctx().at<Map>();
     positions_.clear();
-    for (const auto& walkablePosition : GameCtx::getInstance()
-                                            .map()
-                                            ->queryRoom(x, y)
-                                            ->getWalkablePositions()) {
+    for (const auto& walkablePosition :
+         map.queryRoom(x, y)->getWalkablePositions()) {
         positions_.push_back(walkablePosition);
     }
 }

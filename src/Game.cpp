@@ -4,6 +4,7 @@
 
 #include "Game.h"
 
+#include "EventStore.h"
 #include "GameCtx.h"
 #include "Rng.h"
 #include "Services.h"
@@ -25,7 +26,7 @@ void Game::run() {
     }
 }
 
-void Game::setup(const GameOptions& options) {
+void Game::setup(const GameOptions options) {
     Renderer::getInstance().setup();
 
     SetExitKey(KEY_F11);
@@ -36,6 +37,14 @@ void Game::setup(const GameOptions& options) {
     spdlog::info("Game options: {}", config.dump());
     auto& ecs = Services::Ecs::ref();
     ecs.registry.ctx().emplace<Map>();
+    ecs.registry.ctx().emplace<GameOptions>(options);
+    ecs.registry.ctx().emplace<EventStore>();
+
+    auto& sceneManager = Services::SceneManager::ref();
+    sceneManager.addScene("INTRO", new IntroScene());
+    sceneManager.addScene("PLAY", new PlayScene());
+    sceneManager.addScene("INVENTORY", new InventoryScene());
+    sceneManager.changeScene("INTRO");
 }
 
 Game::~Game() {}
@@ -57,10 +66,4 @@ Game::Game() {
     Services::Ecs::set();
 
     Services::SceneManager::set();
-
-    auto& sceneManager = Services::SceneManager::ref();
-    sceneManager.addScene("INTRO", new IntroScene());
-    sceneManager.addScene("PLAY", new PlayScene());
-    sceneManager.addScene("INVENTORY", new InventoryScene());
-    sceneManager.changeScene("INTRO");
 }

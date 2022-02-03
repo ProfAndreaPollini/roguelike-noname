@@ -17,6 +17,8 @@ class Hero : public Entity {
    public:
     Hero();
 
+    static void createHero();
+
     void draw() { fmt::print("Hero\n"); }
 
     void moveLeft() {

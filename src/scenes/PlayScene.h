@@ -25,9 +25,9 @@ class PlayScene : public Scene {
 
    private:
     void generateMap();
-    auto handleUserInput() -> Command*;
+    auto handleUserInput() -> Rc<Command>;
 
-    void handleRoomCreate(Rc<Map> map) const;
+    void handleRoomCreate(Map& map) const;
     void handleCameraMovement();
 
     bool waitUserInput_;
@@ -35,7 +35,7 @@ class PlayScene : public Scene {
 
     raylib::Camera2D camera_;
 
-    Command* cmd_ = nullptr;
+    Rc<Command> cmd_ = nullptr;
     Room::RoomPtr heroRoom_;
     AStar astar_;
 

@@ -10,18 +10,8 @@
 #include "components/Position.h"
 #include "components/Tags.h"
 
-class HeroSystem {
-    static void updateHero() {
-        auto& ecs = Services::Ecs::ref();
-
-        auto view = ecs.registry.view<HeroTag>();
-        for (auto entity : view) {
-            auto& actions = ecs.registry.get<Actions>(entity);
-            for (auto& action : actions.commands) {
-                action->execute(entity);
-            }
-        }
-    }
+struct HeroSystem {
+    static void updateHero();
 };
 
 #endif  // RL_DA_ZERO_SRC_SYSTEMS_HEROSYSTEM_H

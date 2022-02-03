@@ -15,6 +15,7 @@ struct Inventory {
     void pickUp(Item* item) {
         fmt::print("Hero pick up item\n");
         items.emplace_back(item);
+        fmt::print("Hero has {} items\n", items.size());
     }
 };
 

@@ -17,7 +17,7 @@ class LogOverlay : public Overlay {
     void draw() const override;
 
    private:
-    raylib::Color bgColor_ = raylib::Color{200, 200, 200, 128};
+    raylib::Color bgColor_ = raylib::Color{200, 200, 200, 100};
 };
 
 #endif  // RL_DA_ZERO_SRC_UI_LOGOVERLAY_H

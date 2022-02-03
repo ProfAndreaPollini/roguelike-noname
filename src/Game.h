@@ -33,13 +33,13 @@ struct GameOptions {
     const char* title;
     const char* font;
 
-    GameOptions() : width(80), height(50), title("noname RL"), font("") {}
+    GameOptions() : width(1920), height(1080), title("noname RL"), font("") {}
 };
 
 class Game {
    public:
     Game();
-    void setup(const GameOptions& options = GameOptions());
+    void setup(const GameOptions options = GameOptions());
     void run();
 
     ~Game();

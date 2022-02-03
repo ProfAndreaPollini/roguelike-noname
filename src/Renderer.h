@@ -31,7 +31,7 @@ struct RenderOptions {
     int height;
     const char* title;
 
-    RenderOptions() : width(80), height(50), title("RL-DA-Zero") {}
+    RenderOptions() : width(1920), height(1080), title("RL-DA-Zero") {}
 };
 
 struct DrawEntityInfo {

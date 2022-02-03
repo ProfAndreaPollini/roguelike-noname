@@ -12,7 +12,7 @@
 class Command {
    public:
     virtual ~Command() {}
-    virtual void execute(Entity* entity, Map& map) = 0;
+    //    virtual void execute(Entity* entity, Map& map) = 0;
     virtual void execute(entt::entity& entity) = 0;
 };
 
