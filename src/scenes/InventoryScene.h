@@ -10,6 +10,7 @@
 #include "SceneManager.h"
 #include "Services.h"
 #include "components/Inventory.h"
+#include "components/Named.h"
 #include "components/Tags.h"
 #include "raylib-cpp.hpp"
 
@@ -30,11 +31,12 @@ class InventoryScene : public Scene {
         //                                         {255, 255, 255, 255});
         for (int i = 0; i < inventory.items.size(); i++) {
             auto& item = inventory.items[i];
-            fmt::print("item: {}\n", item->name());
+            const auto name = ecs.registry.get<Named>(item).name;
+            fmt::print("item: {}\n", name);
             //            DrawText("inventario", 10, 100, 20, {255, 255, 255,
             //            255});
-            Renderer::getInstance().drawText(TextFormat(item->name()), 5,
-                                             5 + i * 1, {255, 255, 255, 255});
+            Renderer::getInstance().drawText(TextFormat(name), 5, 5 + i * 1,
+                                             {255, 255, 255, 255});
         }
 
         Renderer::getInstance().draw();

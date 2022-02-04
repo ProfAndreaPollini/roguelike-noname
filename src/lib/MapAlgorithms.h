@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "Graph.h"
-#include "MapPosition.h"
+#include "components/MapPosition.h"
 
 class MapAlgorithm {
    protected:

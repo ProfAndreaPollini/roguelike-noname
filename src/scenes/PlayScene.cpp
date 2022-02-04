@@ -47,13 +47,11 @@ void PlayScene::handleRoomCreate(Map& map) const {
 
     while (attempts < 10) {
         if (attempts == 0) {
-            otherPrefabIndex =
-                Rng::getInstance().getRandomInt(0, mapElements.size() - 1);
+            otherPrefabIndex = Rng::getInstance().getRandomInt(0, mapElements.size() - 1);
 
             otherPrefab = mapElements[otherPrefabIndex];
         }
-        auto roomIdx = Rng::getInstance().getRandomInt(
-            0, map.roomWithConnectionCount() - 1);
+        auto roomIdx = Rng::getInstance().getRandomInt(0, map.roomWithConnectionCount() - 1);
         auto added = map.addPrefabTo(roomIdx, otherPrefab);
         if (added) {
             fmt::print("Added prefab to room {}\n", roomIdx);
@@ -81,10 +79,10 @@ void PlayScene::update() {
         auto hero = ecs.registry.view<HeroTag>().front();
         const auto& position = ecs.registry.get<Position>(hero);
 
-        camera_.target.x = position.x * Renderer::getInstance().getTileSize().x;
-        camera_.target.y = position.y * Renderer::getInstance().getTileSize().y;
+        camera_.target.x = position.col * Renderer::getInstance().getTileSize().x;
+        camera_.target.y = position.row * Renderer::getInstance().getTileSize().y;
 
-        heroRoom_ = map.queryRoom(position.x, position.y);
+        heroRoom_ = map.queryRoom(position.col, position.row);
         //        delete cmd_;
 
         waitUserInput_ = true;
@@ -109,7 +107,7 @@ void PlayScene::render() {
     BeginMode2D(camera_);
 
     map.draw(heroRoom_);
-    Renderer::getInstance().drawEntity({position.x, position.y, "@"});
+    Renderer::getInstance().drawEntity({position.col, position.row, "@"});
     //        renderer_->drawRays(heroRoom, hero_);
     if (display_astar_) {
         Renderer::getInstance().drawAstar(astar_);
@@ -135,8 +133,7 @@ PlayScene::PlayScene() : waitUserInput_(true), alreadyStarted_(false) {
     auto debugUi = new UIDebugOverlay();
     overlays_.push_back(std::shared_ptr<UIDebugOverlay>(debugUi));
 
-    auto logUi = new LogOverlay({(float)options.width - 300, 0},
-                                {300, (float)options.height});
+    auto logUi = new LogOverlay({(float)options.width - 300, 0}, {300, (float)options.height});
     overlays_.push_back(std::shared_ptr<LogOverlay>(logUi));
 }
 
@@ -163,10 +160,10 @@ void PlayScene::onLoad() {
 
     //    auto hero = GameCtx::getInstance().hero();
 
-    camera_.offset = (Vector2){25 * Renderer::getInstance().getTileSize().x,
-                               10 * Renderer::getInstance().getTileSize().y};
-    camera_.target.x = position.x * Renderer::getInstance().getTileSize().x;
-    camera_.target.y = position.y * Renderer::getInstance().getTileSize().y;
+    camera_.offset =
+        (Vector2){25 * Renderer::getInstance().getTileSize().x, 10 * Renderer::getInstance().getTileSize().y};
+    camera_.target.x = position.col * Renderer::getInstance().getTileSize().x;
+    camera_.target.y = position.row * Renderer::getInstance().getTileSize().y;
     camera_.rotation = 0.0f;
     camera_.zoom = 1.0f;
 }
@@ -191,21 +188,19 @@ void PlayScene::generateMap() {
 
     auto rooms = 0;
     auto attempts = 0;
-    auto currentPrefabIndex =
-        Rng::getInstance().getRandomInt(0, mapElements.size() - 1);
+    auto currentPrefabIndex = Rng::getInstance().getRandomInt(0, mapElements.size() - 1);
     auto currentPrefab = mapElements[currentPrefabIndex];
     currentPrefab.setTranslation(100, 100);
 
     //    hero->set(currentPrefab.baricenter().col,
     //    currentPrefab.baricenter().row);
-    position.x = currentPrefab.baricenter().col;
-    position.y = currentPrefab.baricenter().row;
+    position.col = currentPrefab.baricenter().col;
+    position.row = currentPrefab.baricenter().row;
 
-    CameraSystem::createCamera(position.x, position.y, 50, 20);
+    CameraSystem::createCamera(position.col, position.row, 50, 20);
     CameraSystem::updateViewport();
 
-    std::shared_ptr<Room> currentRoom =
-        Room::createFromMapElement(currentPrefab);
+    std::shared_ptr<Room> currentRoom = Room::createFromMapElement(currentPrefab);
 
     //    Graph<Room> graph{currentRoom};
 
@@ -219,7 +214,7 @@ void PlayScene::generateMap() {
     //    dm.run(walkable[0]);
     //    Astar astar(walkable);
 
-    for (int i = 0; i < 20; i++) handleRoomCreate(map);
+    for (int i = 0; i < 15; i++) handleRoomCreate(map);
 }
 
 Rc<Command> PlayScene::handleUserInput() {
@@ -260,7 +255,7 @@ Rc<Command> PlayScene::handleUserInput() {
             auto& position = ecs.registry.get<Position>(hero);
             //            auto hero = GameCtx::getInstance().hero();
 
-            astar_.setup({position.y, position.x}, astar_.positions()[0]);
+            astar_.setup(MapPosition::fromRowCol(position.row, position.col), astar_.positions()[0]);
             astar_.findPath();
             display_astar_ = true;
         }

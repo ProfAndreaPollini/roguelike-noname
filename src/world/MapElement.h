@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "MapPosition.h"
+#include "components/MapPosition.h"
 #include "fmt/core.h"
 
 enum class Direction { NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3 };
@@ -22,10 +22,11 @@ using MapCoord = struct MapPosition;
 
 class MapElementConnector {
    public:
-    explicit MapElementConnector(MapCoord position, Direction direction)
-        : position_(position), direction_(direction) {}
-    explicit MapElementConnector(int row, int col, Direction direction)
-        : position_(row, col), direction_(direction) {}
+    explicit MapElementConnector(MapCoord position, Direction direction) : position_(position), direction_(direction) {}
+    explicit MapElementConnector(int row, int col, Direction direction) : position_(), direction_(direction) {
+        position_.setRow(row);
+        position_.setCol(col);
+    }
 
     [[nodiscard]] auto direction() const -> Direction { return direction_; }
     [[nodiscard]] auto position() const -> MapCoord { return position_; }
@@ -50,12 +51,12 @@ struct MapElementCell {
     MapCoord coords;
     unsigned int value;
 
-    MapElementCell(int row, int col, unsigned int value)
-        : coords(row, col), value(value) {}
-
-    bool operator==(const MapElementCell& other) const {
-        return coords == other.coords && value == other.value;
+    MapElementCell(int row, int col, unsigned int value) : value(value) {
+        coords.setRow(row);
+        coords.setCol(col);
     }
+
+    bool operator==(const MapElementCell& other) const { return coords == other.coords && value == other.value; }
 };
 
 class BaseMapElement {
@@ -65,9 +66,7 @@ class BaseMapElement {
         connectors_.push_back(cell);
     }
 
-    [[nodiscard]] auto connectors() const -> std::vector<MapElementConnector> {
-        return connectors_;
-    }
+    [[nodiscard]] auto connectors() const -> std::vector<MapElementConnector> { return connectors_; }
 
     [[nodiscard]] std::vector<MapElementCell> cells() const { return cells_; }
 
@@ -78,16 +77,20 @@ class BaseMapElement {
             row += cell.coords.row;
             col += cell.coords.col;
         }
-        return {static_cast<int>(row / cells_.size()),
-                static_cast<int>(col / cells_.size())};
+        auto pos = MapPosition();
+        pos.setRow(row / cells_.size());
+        pos.setCol(col / cells_.size());
+        return pos;
     }
 
-    void setTranslation(MapPosition translation) {
-        setTranslation(translation.row, translation.col);
-    }
+    void setTranslation(MapPosition translation) { setTranslation(translation.row, translation.col); }
 
     void setTranslation(int row, int col) {
-        MapCoord translation_ = {row, col};
+        //        MapCoord translation_ = {row, col};
+        MapCoord translation_ = {};
+        translation_.setRow(row);
+        translation_.setCol(col);
+
         const auto connectorCoords = connectors_[pivot_].position();
         for (auto& cell : cells_) {
             cell.coords -= connectorCoords;
@@ -128,8 +131,7 @@ class BaseMapElement {
         for (const auto& cell : cells()) {
 #pragma clang loop unroll_count(8)
             for (const auto& otherCell : other.cells()) {
-                if (otherCell.coords.row == cell.coords.row &&
-                    otherCell.coords.col == cell.coords.col) {
+                if (otherCell.coords.row == cell.coords.row && otherCell.coords.col == cell.coords.col) {
                     fmt::print("overlaps\n");
                     return true;
                 }

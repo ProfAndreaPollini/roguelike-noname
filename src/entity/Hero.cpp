@@ -10,12 +10,14 @@
 #include "components/Position.h"
 #include "components/Tags.h"
 
-Hero::Hero() : Entity{15, 10} {}
+// Hero::Hero() : Entity{15, 10} {}
 void Hero::createHero() {
     auto& ecs = Services::Ecs::ref();
     auto entity = ecs.registry.create();
 
-    ecs.registry.emplace<Position>(entity, 15, 10);
+    auto& position = ecs.registry.emplace<Position>(entity);
+    position.setRow(15);
+    position.setCol(10);
     ecs.registry.emplace<HeroTag>(entity);
     ecs.registry.emplace<Actions>(entity);
     ecs.registry.emplace<Inventory>(entity);

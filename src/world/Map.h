@@ -39,11 +39,15 @@ class Map {
         auto rooms = rooms_.elements();
         for (const auto& room : rooms) {
             for (const auto& cell : prefab.cells()) {
-                for (const auto& otherCell : room->cells()) {
-                    if (cell.coords == otherCell.position.coords) {
-                        return true;
-                    }
+                if (room->contains(cell.coords.col, cell.coords.row)) {
+                    return true;
                 }
+                //                for (const auto& otherCell : room->cells()) {
+                //                    if (cell.coords ==
+                //                    otherCell.position.coords) {
+                //                        return true;
+                //                    }
+                //                }
             }
         }
 
@@ -58,66 +62,28 @@ class Map {
 
     void draw(const RoomPtr& heroRoom) const;
 
-    [[nodiscard]] auto isWalkable(int x, int y) const -> bool {
-        for (const auto& room : rooms_.elements()) {
-            if (room->isWalkable(x, y)) {
-                return true;
-            }
+    auto isWalkable(int x, int y) const -> bool {
+        const auto room = queryRoom(x, y);
+        if (room) {
+            return room->isWalkable(x, y);
         }
+        //        for (const auto& room : rooms_.elements()) {
+        //            if (room->isWalkable(x, y)) {
+        //                return true;
+        //            }
+        //        }
         return false;
     }
 
-    auto addPrefabTo(int roomIndex, MapPrefab& prefab) -> bool {
-        auto room = getRoomWithConnections();
-        const auto connector = room->connector(
-            Rng::getInstance().getRandomInt(0, room->connectorCount() - 1));
+    auto addPrefabTo(int roomIndex, MapPrefab& prefab) -> bool;
 
-        while (!isDirectionFacing(connector.direction(),
-                                  prefab.selectedConnectorDirection())) {
-            prefab.rotateRight();
-        }
-
-        auto selectedConnectorPos = connector.position();
-        auto selectedConnectorDir = connector.direction();
-        switch (selectedConnectorDir) {
-            case Direction::NORTH:
-                selectedConnectorPos.row -= 1;
-                break;
-            case Direction::EAST:
-                selectedConnectorPos.col += 1;
-                break;
-            case Direction::SOUTH:
-                selectedConnectorPos.row += 1;
-                break;
-            case Direction::WEST:
-                selectedConnectorPos.col -= 1;
-                break;
-        }
-        prefab.setTranslation(selectedConnectorPos);
-
-        if (overlaps(prefab)) {
-            fmt::print("overlaps\n");
-            return false;
-        }
-
-        room->remove(connector);
-        prefab.removeSelectedConnector();
-
-        auto newRoom = Room::createFromMapElement(prefab);
-        newRoom->spawnItems();
-        addRoom(newRoom);
-        rooms_.addEdge(room, newRoom);
-
-        return true;
-    }
-
-    auto getItemAt(int col, int row) -> Item* {
+    auto getItemAt(int col, int row) -> entt::entity {
         for (const auto& room : rooms_.elements()) {
             if (room->contains(col, row)) {
                 return room->getItemAt(col, row);
             }
         }
-        return nullptr;
+        return entt::null;
     }
 
     void removeItemAt(int col, int row) {
@@ -128,60 +94,21 @@ class Map {
         }
     }
 
-    [[maybe_unused]] auto getRoom(int index) const -> const Room& {
-        return *rooms_.elements()[index];
-    }
+    [[maybe_unused]] auto getRoom(int index) const -> const Room& { return *rooms_.elements()[index]; }
 
-    [[maybe_unused]] auto getRoom(int index) -> RoomPtr {
-        return rooms_.elementAt(index);
-    }
+    [[maybe_unused]] auto getRoom(int index) -> RoomPtr { return rooms_.elementAt(index); }
 
-    auto getRoomWithConnections() -> RoomPtr {
-        auto n = roomWithConnectionCount();
-        if (n == 0) {
-            return nullptr;
-        }
-        auto elements = rooms_.elements();
-        std::vector<RoomPtr> found;
-        for (const auto& element : elements) {
-            if (element->connectorCount() > 0) {
-                found.push_back(element);
-            }
-        }
+    auto getRoomWithConnections() -> RoomPtr;
 
-        if (found.empty()) {
-            return nullptr;
-        }
-
-        return found[Rng::getInstance().getRandomInt(0, found.size() - 1)];
-    }
-
-    auto queryRoom(int x, int y) -> RoomPtr {
-        for (const auto& room : rooms_.elements()) {
-            if (room->contains(x, y)) {
-                return room;
-            }
-        }
-        return nullptr;
-    }
+    auto queryRoom(int x, int y) const -> RoomPtr;
 
     /// Returns the number of rooms
-    [[nodiscard]] auto roomCount() const -> int {
-        return rooms_.elements().size();
-    }
+    [[nodiscard]] auto roomCount() const -> int;
 
     auto getRooms() const -> const std::vector<RoomPtr>;
 
     /// Returns the number of rooms with at least one connection
-    [[nodiscard]] auto roomWithConnectionCount() const -> int {
-        int count = 0;
-        for (const auto& room : rooms_.elements()) {
-            if (room->connectorCount() > 0) {
-                count++;
-            }
-        }
-        return count;
-    }
+    [[nodiscard]] auto roomWithConnectionCount() const -> int;
 
     std::vector<int> roomConnectionsBFS() {
         std::vector<int> roomsBFS = rooms_.BFS();

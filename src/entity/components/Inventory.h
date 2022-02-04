@@ -8,11 +8,14 @@
 #include <vector>
 
 #include "Item.h"
+#include "entt/entity/entity.hpp"
 
 struct Inventory {
-    std::vector<Item*> items;
+    std::vector<entt::entity> items;
 
-    void pickUp(Item* item) {
+    bool hasItems() const { return !items.empty(); }
+
+    void pickUp(entt::entity item) {
         fmt::print("Hero pick up item\n");
         items.emplace_back(item);
         fmt::print("Hero has {} items\n", items.size());

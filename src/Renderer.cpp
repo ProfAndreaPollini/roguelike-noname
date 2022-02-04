@@ -6,8 +6,11 @@
 
 #include "GameCtx.h"
 #include "MapAlgorithms.h"
-#include "MapPosition.h"
 #include "Services.h"
+#include "components/Inventory.h"
+#include "components/MapPosition.h"
+#include "components/Position.h"
+#include "components/Tags.h"
 
 void Renderer::prepare() const {
     BeginDrawing();
@@ -21,8 +24,7 @@ void Renderer::draw() const {
 }
 
 void Renderer::setup() {
-    auto ptr = std::make_unique<raylib::Window>(options.width, options.height,
-                                                options.title);
+    auto ptr = std::make_unique<raylib::Window>(options.width, options.height, options.title);
     window_.swap(ptr);
 
     font_ = LoadFont("assets/fonts/roguelike-fonts-1.0/whitrabt.ttf");
@@ -31,8 +33,7 @@ void Renderer::setup() {
     fontSize_.y = (int)fontSize_.y;
 }
 
-void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
-                        int row) const {
+void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col, int row) const {
     //        prefab.setDirection(Direction::EAST);
     auto& ecs = Services::Ecs::ref();
 
@@ -41,45 +42,71 @@ void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col,
     const auto& lastRoom = roomsBFS.back();
 
     //      auto baricenter = room.baricenter();
-    for (auto& cell : room->cells()) {
+    for (auto& cellEntity : room->cells()) {
+        const auto& position = ecs.registry.get<Position>(cellEntity);
+        const auto& cell = ecs.registry.get<CellTag>(cellEntity);
+        const auto& inventory = ecs.registry.get<Inventory>(cellEntity);
         auto isCurrent = room == heroRoom;
 
-        if (cell.coords().row > 0 && cell.coords().col > 0) {
-            if (cell.cell.type == CellType::CELL_WALL) {
-                drawRectangle(col + cell.coords().col, row + cell.coords().row,
-                              GRAY);
+        if (position.row > 0 && position.col > 0) {
+            if (cell.type == CellType::CELL_WALL) {
+                drawRectangle(col + position.col, row + position.row, GRAY);
 
-                drawText("#", col + cell.coords().col, row + cell.coords().row,
-                         BLUE);
-            } else if (cell.cell.type == CellType::CELL_FLOOR) {
+                drawText("#", col + position.col, row + position.row, BLUE);
+            } else if (cell.type == CellType::CELL_DEBUG) {
+                drawRectangle(col + position.col, row + position.row, ORANGE);
+
+                drawText("#", col + position.col, row + position.row, WHITE);
+            } else if (cell.type == CellType::CELL_FLOOR) {
                 if (isCurrent) {
-                    drawRectangle(col + cell.coords().col,
-                                  row + cell.coords().row, DARKGRAY);
+                    drawRectangle(col + position.col, row + position.row, DARKGRAY);
                 } else if (room == map.getRoom(lastRoom)) {
-                    drawRectangle(col + cell.coords().col,
-                                  row + cell.coords().row, RED);
+                    drawRectangle(col + position.col, row + position.row, RED);
                 } else {
-                    drawRectangle(col + cell.coords().col,
-                                  row + cell.coords().row, DARKBROWN);
+                    drawRectangle(col + position.col, row + position.row, DARKBROWN);
                 }
-                if (cell.cell.item != nullptr) {
-                    drawText("*", col + cell.coords().col,
-                             row + cell.coords().row, BLUE);
+                if (inventory.hasItems()) {
+                    drawText("*", col + position.col, row + position.row, BLUE);
                 }
                 //                DrawText(".", std::abs(col +
                 //                cell.coords().col) * 14, std::abs(row +
                 //                cell.coords().row) * 20, 20, RED);
             } else {
-                DrawText("?", std::abs(col + cell.coords().col) * 14,
-                         std::abs(row + cell.coords().row) * 20, 20, RED);
-                fmt::print("??? {} {}\n", cell.coords().col, cell.coords().row);
+                DrawText("?", std::abs(col + position.col) * 14, std::abs(row + position.row) * 20, 20, RED);
+                fmt::print("??? {} {}\n", position.col, position.row);
             }
         }
+
+        //        if (cell.coords().row > 0 && cell.coords().col > 0) {
+        //            if (cell.cell.type == CellType::CELL_WALL) {
+        //                drawRectangle(col + cell.coords().col, row + cell.coords().row, GRAY);
+        //
+        //                drawText("#", col + cell.coords().col, row + cell.coords().row, BLUE);
+        //            } else if (cell.cell.type == CellType::CELL_FLOOR) {
+        //                if (isCurrent) {
+        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, DARKGRAY);
+        //                } else if (room == map.getRoom(lastRoom)) {
+        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, RED);
+        //                } else {
+        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, DARKBROWN);
+        //                }
+        //                if (cell.cell.item != nullptr) {
+        //                    drawText("*", col + cell.coords().col, row + cell.coords().row, BLUE);
+        //                }
+        //                //                DrawText(".", std::abs(col +
+        //                //                cell.coords().col) * 14, std::abs(row +
+        //                //                cell.coords().row) * 20, 20, RED);
+        //            } else {
+        //                DrawText("?", std::abs(col + cell.coords().col) * 14, std::abs(row + cell.coords().row) * 20,
+        //                20, RED); fmt::print("??? {} {}\n", cell.coords().col, cell.coords().row);
+        //            }
+        //        }
     }
 
-    for (const auto& connector : room->connectors()) {
-        auto coords = connector.position();
-        auto direction = connector.direction();
+    for (const auto& connectorEntity : room->connectors()) {
+        const auto& connector = ecs.registry.get<ConnectorTag>(connectorEntity);
+        auto coords = connector.position;
+        auto direction = connector.direction;
         if (coords.row > 0 && coords.col > 0) {
             raylib::Color c;
             switch (direction) {
@@ -120,16 +147,14 @@ void Renderer::drawAstar(AStar& astar) const {
 
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines
 // intersect the intersection point may be stored in the floats i_x and i_y.
-auto getLineIntersection(float p0X, float p0Y, float p1X, float p1Y, float p2X,
-                         float p2Y, float p3X, float p3Y, float& iX, float& iY)
-    -> bool {
+auto getLineIntersection(float p0X, float p0Y, float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y,
+                         float& iX, float& iY) -> bool {
     auto s1X = p1X - p0X;
     auto s1Y = p1Y - p0Y;
     auto s2X = p3X - p2X;
     auto s2Y = p3Y - p2Y;
 
-    auto s =
-        (-s1Y * (p0X - p2X) + s1X * (p0Y - p2Y)) / (-s2X * s1Y + s1X * s2Y);
+    auto s = (-s1Y * (p0X - p2X) + s1X * (p0Y - p2Y)) / (-s2X * s1Y + s1X * s2Y);
     auto t = (s2X * (p0Y - p2Y) - s2Y * (p0X - p2X)) / (-s2X * s1Y + s1X * s2Y);
 
     if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
@@ -155,7 +180,7 @@ std::vector<MapPosition> Bresenham(int x1, int y1, int const x2, int const y2) {
     delta_y = std::abs(delta_y) << 1;
 
     //    plot(x1, y1);
-    ret.emplace_back(y1, x1);
+    ret.push_back(MapPosition::fromRowCol(y1, x1));
 
     if (delta_x >= delta_y) {
         // error may go below zero
@@ -173,7 +198,7 @@ std::vector<MapPosition> Bresenham(int x1, int y1, int const x2, int const y2) {
             error += delta_y;
             x1 += ix;
 
-            ret.emplace_back(y1, x1);
+            ret.push_back(MapPosition::fromRowCol(y1, x1));
         }
     } else {
         // error may go below zero
@@ -191,16 +216,15 @@ std::vector<MapPosition> Bresenham(int x1, int y1, int const x2, int const y2) {
             error += delta_x;
             y1 += iy;
 
-            ret.emplace_back(y1, x1);
+            ret.push_back(MapPosition::fromRowCol(y1, x1));
         }
     }
     return ret;
 }
 
-void DDAWallIntersection(float posX, float posY, float endX, float endY,
-                         int cellCol, int cellRow, float angle, float& dist) {
-    double cameraX =
-        2 * (angle - 45) / (double)90.0 - 1;  // x-coordinate in camera space
+void DDAWallIntersection(float posX, float posY, float endX, float endY, int cellCol, int cellRow, float angle,
+                         float& dist) {
+    double cameraX = 2 * (angle - 45) / (double)90.0 - 1;  // x-coordinate in camera space
 
     float mapX = posX;
     float mapY = posY;
@@ -261,8 +285,7 @@ void DDAWallIntersection(float posX, float posY, float endX, float endY,
         if (mapX == cellCol && mapY == cellRow) {
             hit = true;
         }
-        fmt::print("{} {} {} {} {} {}\n", mapX, mapY, cellCol, cellRow,
-                   sideDistX, sideDistY);
+        fmt::print("{} {} {} {} {} {}\n", mapX, mapY, cellCol, cellRow, sideDistX, sideDistY);
     }
 
     if (side == 0)

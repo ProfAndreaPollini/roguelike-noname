@@ -14,9 +14,9 @@
 #include "Hero.h"
 #include "MapAlgorithms.h"
 #include "MapElement.h"
-#include "MapPosition.h"
 #include "MapPrefab.h"
 #include "Room.h"
+#include "components/MapPosition.h"
 #include "extras/raygui.h"
 #include "raylib-cpp.hpp"
 
@@ -127,56 +127,62 @@ class Renderer {
         DrawCircle(x * fontSize_.x, y * fontSize_.y, r, c);
     }
 
-    [[maybe_unused]] void drawRays(Room::RoomPtr room, const Hero& hero) {
-        // x =x0+t*x_d
-        // y =y0+t*y_d
-        float startX = hero.x();
-        float startY = hero.y();
-        float endX = hero.x();
-        float endY = hero.y();
-        double angle = pi / 4;
-        auto cells = room->cells();
-        std::vector<RoomElement> walls;
-        std::copy_if(cells.begin(), cells.end(), std::back_inserter(walls),
-                     [](const RoomElement& cell) {
-                         return cell.cell.type == CellType::CELL_WALL;
-                     });
+//    [[maybe_unused]] void drawRays(Room::RoomPtr room, const Hero& hero) {
+//        // x =x0+t*x_d
+//        // y =y0+t*y_d
+//        float startX = hero.x();
+//        float startY = hero.y();
+//        float endX = hero.x();
+//        float endY = hero.y();
+//        double angle = pi / 4;
+//        auto cells = room->cells();
+//        std::vector<RoomElement> walls;
+//        std::copy_if(cells.begin(), cells.end(), std::back_inserter(walls),
+//                     [](const RoomElement& cell) {
+//                         return cell.cell.type == CellType::CELL_WALL;
+//                     });
+//
+//        //            fmt::print("?>>> {} {}\t",std::fabs(endX - startX) ,
+//        //            std::fabs(endY - startY));
+//        //            fmt::print("--------------------\n");
+//        for (angle = 45; angle < 135; angle += 1) {
+//            for (int i = 0; i < walls.size(); ++i) {
+//                auto cell = walls[i];
+//                float dist = 0;
+//
+//                endY = startY - std::sinf(angle * (pi / 180.0)) * 10;
+//                endX = startX + std::cosf(angle * (pi / 180.0)) * 10;
+//                //                while (std::fabs(endX - startX) +
+//                //                std::fabs(endY - startY) <
+//                //                       20) {
+//                auto path = Bresenham(startX, startY, endX, endY);
+//
+//                for (auto& p : path) {
+//                    //                        fmt::print("{} {}\t", p.col,
+//                    //                        p.row); fmt::print("{} {}\n",
+//                    //                        cell.coords().col,
+//                    //                                   cell.coords().row);
+//                    if (p == cell.coords()) {
+//                        drawCircle(p.col, p.row, 10, GREEN);
+//                        //                        DDAWallIntersection(startX,
+//                        //                        startY, endX, endY,
+//                        //                                            cell.coords().col,
+//                        //                                            cell.coords().row,
+//                        //                                            angle,dist);
+//                        //                        fmt::print("{} {}\t", dist,
+//                        //                        angle);
+//                    } else
+//                        drawRectangle(p.col, p.row, RED);
+//                }
+//            }
+//        }
+//    }
 
-        //            fmt::print("?>>> {} {}\t",std::fabs(endX - startX) ,
-        //            std::fabs(endY - startY));
-        //            fmt::print("--------------------\n");
-        for (angle = 45; angle < 135; angle += 1) {
-            for (int i = 0; i < walls.size(); ++i) {
-                auto cell = walls[i];
-                float dist = 0;
 
-                endY = startY - std::sinf(angle * (pi / 180.0)) * 10;
-                endX = startX + std::cosf(angle * (pi / 180.0)) * 10;
-                //                while (std::fabs(endX - startX) +
-                //                std::fabs(endY - startY) <
-                //                       20) {
-                auto path = Bresenham(startX, startY, endX, endY);
 
-                for (auto& p : path) {
-                    //                        fmt::print("{} {}\t", p.col,
-                    //                        p.row); fmt::print("{} {}\n",
-                    //                        cell.coords().col,
-                    //                                   cell.coords().row);
-                    if (p == cell.coords()) {
-                        drawCircle(p.col, p.row, 10, GREEN);
-                        //                        DDAWallIntersection(startX,
-                        //                        startY, endX, endY,
-                        //                                            cell.coords().col,
-                        //                                            cell.coords().row,
-                        //                                            angle,dist);
-                        //                        fmt::print("{} {}\t", dist,
-                        //                        angle);
-                    } else
-                        drawRectangle(p.col, p.row, RED);
-                }
-            }
-        }
-    }
+
+
+
     //        float xEnd =0;
     //        float yEnd =0;
     //        auto isIntersecting =

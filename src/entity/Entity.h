@@ -8,7 +8,7 @@
 class Item;
 
 class Entity {
-public:
+   public:
     Entity(int x, int y) : x_(x), y_(y) {}
     virtual ~Entity() = default;
     int x() const { return x_; }
@@ -27,11 +27,11 @@ public:
         y_ = y;
     }
 
+    virtual void pickUp(Item* item){};
 
-    virtual void pickUp(Item *item) {};
-private:
+   private:
     int x_;
     int y_;
 };
 
-#endif //RL_DA_ZERO_ENTITY_H
+#endif  // RL_DA_ZERO_ENTITY_H

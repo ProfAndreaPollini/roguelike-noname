@@ -13,29 +13,31 @@ void MoveCommand::execute(entt::entity& entity) {
     auto& position = ecs.registry.get<Position>(entity);
 
     spdlog::debug("MoveCommand: hero ({},{}), dx={}, dy={}, walkable? {}",
-                  position.x, position.y, dx, dy,
-                  map.isWalkable(position.x + dx, position.y + dy));
+                  position.col, position.row, dx, dy,
+                  map.isWalkable(position.col + dx, position.row + dy));
 
     if (map.isWalkable(
-            position.x + dx,
-            position.y + dy)) {  // se la cella di arrivo é camminabile
-        position.x += dx;
-        position.y += dy;
+            position.col + dx,
+            position.row + dy)) {  // se la cella di arrivo é camminabile
+        position.col += dx;
+        position.row += dy;
 
         // genera evento
         ecs.registry.ctx().at<EventStore>().store(new TestEvent("hero moved"));
-        CameraSystem::updateCamera(position.x, position.y);
+        CameraSystem::updateCamera(position.col, position.row);
         CameraSystem::updateViewport();
 
-        auto item = map.getItemAt(position.x, position.y);  // prendi l'oggetto
+        auto item =
+            map.getItemAt(position.col, position.row);  // prendi l'oggetto
         // nella cella di arrivo
-        if (item != nullptr) {
-            fmt::print("MoveCommand: found item {}\n", item->name());
+        if (item != entt::null) {
+            const auto name = ecs.registry.get<Named>(item).name;
+            fmt::print("MoveCommand: found item {}\n", name);
             ecs.registry.ctx().at<EventStore>().store(new ItemFoundEvent(item));
             auto& inventory = ecs.registry.get<Inventory>(entity);
             inventory.pickUp(item);
 
-            map.removeItemAt(position.x, position.y);
+            map.removeItemAt(position.col, position.row);
         }
     }
 }

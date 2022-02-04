@@ -8,22 +8,27 @@
 #include <string>
 
 #include "Event.h"
-#include "Item.h"
+#include "Services.h"
+#include "components/Named.h"
+#include "entt/entt.hpp"
+#include "fmt/format.h"
 
 class ItemFoundEvent : public Event {
    public:
-    ItemFoundEvent(Item* item) : item(item) {}
+    ItemFoundEvent(entt::entity item) : item(item) {}
 
-    Item* getItem() { return item; }
+    entt::entity getItem() { return item; }
 
     std::string str() const override {
-        std::string s = fmt::format("Hai trovato: {}.", item->name());
+        auto& ecs = Services::Ecs::ref();
+        const auto name = ecs.registry.get<Named>(item).name;
+        std::string s = fmt::format("Hai trovato: {}.", name);
 
         return s;
     }
 
    private:
-    Item* item;
+    entt::entity item;
 };
 
 #endif  // RL_DA_ZERO_SRC_EVENTS_ITEMFOUNDEVENT_H

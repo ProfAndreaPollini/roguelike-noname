@@ -19,9 +19,7 @@ void AStar::findPath() {
     std::unordered_map<MapPosition, float> gScore;
     std::unordered_map<MapPosition, float> fScore;
 
-    auto cmp = [&fScore](MapPosition left, MapPosition right) {
-        return fScore[left] < fScore[right];
-    };
+    auto cmp = [&fScore](MapPosition left, MapPosition right) { return fScore[left] < fScore[right]; };
     std::multiset<MapPosition, decltype(cmp)> openSet_multiset(cmp);
 
     auto heuristic = [](const MapPosition& g, const MapPosition& pos) {
@@ -90,8 +88,7 @@ void AStar::findPath() {
                 if (tentativeGScore < gScore[neighbor]) {
                     cameFrom[neighbor] = current;
                     gScore[neighbor] = tentativeGScore;
-                    fScore[neighbor] =
-                        tentativeGScore + heuristic(goal_, neighbor);
+                    fScore[neighbor] = tentativeGScore + heuristic(goal_, neighbor);
                     if (!openSet_multiset.contains(neighbor)) {
                         openSet_multiset.insert(neighbor);
                     }
@@ -108,9 +105,7 @@ void AStar::findPath() {
     }
 }
 
-void AStar::reconstructPath(
-    std::unordered_map<MapPosition, MapPosition>& cameFrom,
-    MapPosition current) {
+void AStar::reconstructPath(std::unordered_map<MapPosition, MapPosition>& cameFrom, MapPosition current) {
     path_.clear();
     while (current != start_) {
         path_.push_back(current);
@@ -131,13 +126,10 @@ void MapAlgorithm::updateFromMap() {
         }
     }
     for (const auto& pos : positions_) {
-        auto tentative = {MapPosition{pos.row - 1, pos.col},
-                          MapPosition{pos.row + 1, pos.col},
-                          MapPosition{pos.row, pos.col - 1},
-                          MapPosition{pos.row, pos.col + 1}};
+        auto tentative = {MapPosition::fromRowCol(pos.row - 1, pos.col), MapPosition::fromRowCol(pos.row + 1, pos.col),
+                          MapPosition::fromRowCol(pos.row, pos.col - 1), MapPosition::fromRowCol(pos.row, pos.col + 1)};
         for (const auto neighbor : tentative) {
-            if (std::find(positions_.begin(), positions_.end(), neighbor) !=
-                positions_.end()) {
+            if (std::find(positions_.begin(), positions_.end(), neighbor) != positions_.end()) {
                 //                lattice_.addElement(std::make_shared<MapPosition>(neighbor));
                 lattice_.addEdge(pos, neighbor);
             }
@@ -149,8 +141,7 @@ void MapAlgorithm::updateFromMap() {
 
     auto& map = ecs.registry.ctx().at<Map>();
     positions_.clear();
-    for (const auto& walkablePosition :
-         map.queryRoom(x, y)->getWalkablePositions()) {
+    for (const auto& walkablePosition : map.queryRoom(x, y)->getWalkablePositions()) {
         positions_.push_back(walkablePosition);
     }
 }

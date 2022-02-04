@@ -5,9 +5,8 @@
 #ifndef RL_DA_ZERO_SRC_ENTITY_COMPONENTS_POSITION_H
 #define RL_DA_ZERO_SRC_ENTITY_COMPONENTS_POSITION_H
 
-struct Position {
-    int x;
-    int y;
-};
+#include "MapPosition.h"
+
+using Position = struct MapPosition;
 
 #endif  // RL_DA_ZERO_SRC_ENTITY_COMPONENTS_POSITION_H

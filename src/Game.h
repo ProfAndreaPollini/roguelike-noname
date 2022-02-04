@@ -35,7 +35,7 @@ struct GameOptions {
 
     GameOptions() : width(1920), height(1080), title("noname RL"), font("") {}
 };
-
+ 
 class Game {
    public:
     Game();

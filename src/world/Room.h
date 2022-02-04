@@ -6,21 +6,22 @@
 #define RL_DA_ZERO_ROOM_H
 
 #include <memory>
+#include <set>
 #include <vector>
 
-#include "Cell.h"
+//#include "Cell.h"
 #include "MapElement.h"
-#include "MapPosition.h"
 #include "MapPrefab.h"
-#include "Rng.h"
-#include "SwordItem.h"
+//#include "Rng.h"
+//#include "SwordItem.h"
+#include "entt/entity/entity.hpp"
 
-struct RoomElement {
-    Cell cell;
-    MapElementCell position;
-
-    MapPosition coords() const { return position.coords; }
-};
+// struct RoomElement {
+//     Cell cell;
+//     MapElementCell position;
+//
+//     MapPosition coords() const { return position.coords; }
+// };
 
 // struct RoomConnector {
 //     Cell cell;
@@ -32,145 +33,63 @@ using RoomConnector = MapElementConnector;
 class Room {
    public:
     using RoomPtr = std::shared_ptr<Room>;
+    using RoomElement = entt::entity;
+    using RoomConnector = entt::entity;
 
-    Room() = default;
+    Room();
     ~Room() = default;
 
-    void addConnectedRoom(RoomPtr room) { connectedRooms_.push_back(room); }
+    [[maybe_unused]] void addConnectedRoom(RoomPtr room) { connectedRooms_.push_back(room); }
 
-    static RoomPtr createFromMapElement(MapPrefab& mapElement);
+    static auto createFromMapElement(MapPrefab& mapElement) -> RoomPtr;
 
-    void addConnection(RoomPtr room) { connectedRooms_.push_back(room); }
+    //    void addConnection(RoomPtr room) { connectedRooms_.push_back(room); }
 
-    const std::vector<RoomElement>& cells() const { return cells_; }
+    [[nodiscard]] auto cells() const -> const std::set<RoomElement>&;
 
-    std::vector<RoomElement>& cells() { return cells_; }
+    auto cells() -> std::set<RoomElement>& { return cells_; }
 
-    std::vector<RoomPtr>& connectedRooms() { return connectedRooms_; }
+    //    auto connectedRooms() -> std::vector<RoomPtr>& { return
+    //    connectedRooms_; }
 
-    void addConnector(RoomConnector connector) {
-        connectors_.push_back(connector);
-    }
+    void addConnector(RoomConnector connector);
 
-    [[nodiscard]] const std::vector<RoomConnector>& connectors() const {
-        return connectors_;
-    }
+    [[nodiscard]] auto connectors() const -> const std::set<RoomConnector>&;
 
-    std::vector<RoomConnector>& connectors() { return connectors_; }
+    auto connectors() -> std::set<RoomConnector>&;
 
-    RoomConnector& connector(int index) { return connectors_[index]; }
+    auto connector(int index) -> RoomConnector;
 
-    [[nodiscard]] const RoomConnector& connector(int index) const {
-        return connectors_[index];
-    }
+    [[nodiscard]] auto connector(int index) const -> const RoomConnector&;
 
-    [[nodiscard]] int connectorCount() const { return connectors_.size(); }
+    [[nodiscard]] auto connectorCount() const -> int;
 
-    void spawnItems() {
-        for (int i = 0; i < 5; i++) {
-            if (Rng::getInstance().getRandomInt(0, 100) < 50) {
-                cells_[Rng::getInstance().getRandomInt(0, cells_.size() - 1)]
-                    .cell.item = new SwordItem();
-            }
-        }
-    }
+    void spawnItems();
 
-    [[nodiscard]] bool overlaps(const Room& other) const {  // TODO: implement
-        for (const auto& cell : cells_) {
-            for (const auto& otherCell : other.cells_) {
-                if (cell.position.coords == otherCell.position.coords) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    [[nodiscard]] bool overlaps(const Room& other) const;
 
-    void remove(const RoomElement& element) {
-        cells_.erase(std::remove_if(cells_.begin(), cells_.end(),
-                                    [&element](const RoomElement& cell) {
-                                        return cell.position.coords ==
-                                               element.position.coords;
-                                    }),
-                     cells_.end());
-    }
+    void removeElement(const RoomElement& element);
 
-    void remove(const RoomConnector& connector) {
-        connectors_.erase(std::remove_if(connectors_.begin(), connectors_.end(),
-                                         [&connector](const RoomConnector& c) {
-                                             return c.position() ==
-                                                    connector.position();
-                                         }),
-                          connectors_.end());
-        RoomElement element = {
-            CellType::CELL_FLOOR,
-            {connector.position().row, connector.position().col,
-             static_cast<unsigned int>(0xffffffff)}};
-        cells_.push_back(element);
-    }
+    void removeConnector(const RoomConnector& connector);
 
-    auto isWalkable(int col, int row) const -> bool {
-        for (const auto& cell : cells_) {
-            if (cell.coords().col == col && cell.coords().row == row) {
-                return cell.cell.isWalkable();
-            }
-        }
-        return false;
-    }
+    auto isWalkable(int col, int row) -> bool;
 
-    auto getWalkablePositions() const -> std::vector<MapPosition> {
-        std::vector<MapPosition> positions;
-        for (const auto& cell : cells_) {
-            if (cell.cell.isWalkable()) {
-                positions.push_back(cell.coords());
-            }
-        }
-        return positions;
-    }
+    auto getWalkablePositions() const -> std::vector<MapPosition>;
 
-    Item* getItemAt(int col, int row) {
-        for (auto& cell : cells_) {
-            if (cell.coords().col == col && cell.coords().row == row) {
-                if (cell.cell.item) {
-                    fmt::print("item = {}\n", cell.cell.item->name());
-                    return cell.cell.item;
-                    cell.cell.item = nullptr;
-                }
-            }
-        }
-        return nullptr;
-    }
+    entt::entity getItemAt(int col, int row);
 
-    void removeItemAt(int col, int row) {
-        for (auto& cell : cells_) {
-            if (cell.coords().col == col && cell.coords().row == row) {
-                cell.cell.item = nullptr;
-                return;
-            }
-        }
-    }
+    void removeItemAt(int col, int row);
 
-    Cell& get(int col, int row) {
-        for (auto& cell : cells_) {
-            if (cell.coords().col == col && cell.coords().row == row) {
-                return cell.cell;
-            }
-        }
-    }
+    auto get(int col, int row) -> entt::entity;
 
-    bool contains(int col, int row) {
-        for (const auto& cell : cells_) {
-            if (cell.coords().col == col && cell.coords().row == row) {
-                return true;
-            }
-        }
-        return false;
-    }
+    auto contains(int col, int row) -> bool;
 
    private:
     std::vector<RoomPtr> connectedRooms_;
-    std::vector<RoomElement> cells_;
-    std::vector<RoomConnector> connectors_;
+    std::set<RoomElement> cells_;
+    std::set<RoomConnector> connectors_;
+
+    entt::entity entity_;
 };
 
 #endif  // RL_DA_ZERO_ROOM_H

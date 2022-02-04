@@ -9,36 +9,32 @@ struct MapPosition {
     int row{0};
     int col{0};
 
-    MapPosition(int row, int col) : row(row), col(col) {}
+    static MapPosition fromRowCol(int row, int col) {
+        MapPosition mp;
+        mp.row = row;
+        mp.col = col;
+        return mp;
+    }
+
     MapPosition() = default;
 
-    bool operator==(const MapPosition& other) const {
-        return row == other.row && col == other.col;
-    }
+    void setRow(int row) { this->row = row; }
 
-    bool operator!=(const MapPosition& other) const {
-        return !(*this == other);
-    }
+    void setCol(int col) { this->col = col; }
 
-    MapPosition operator+(const MapPosition& other) const {
-        return {row + other.row, col + other.col};
-    }
+    bool operator==(const MapPosition& other) const { return row == other.row && col == other.col; }
 
-    MapPosition operator-(const MapPosition& other) const {
-        return {row - other.row, col - other.col};
-    }
+    bool operator!=(const MapPosition& other) const { return !(*this == other); }
 
-    MapPosition operator+(int other) const {
-        return {row + other, col + other};
-    }
+    MapPosition operator+(const MapPosition& other) const { return {row + other.row, col + other.col}; }
 
-    MapPosition operator-(int other) const {
-        return {row - other, col - other};
-    }
+    MapPosition operator-(const MapPosition& other) const { return {row - other.row, col - other.col}; }
 
-    MapPosition operator*(int other) const {
-        return {row * other, col * other};
-    }
+    MapPosition operator+(int other) const { return {row + other, col + other}; }
+
+    MapPosition operator-(int other) const { return {row - other, col - other}; }
+
+    MapPosition operator*(int other) const { return {row * other, col * other}; }
 
     MapPosition operator+=(const MapPosition& other) {
         row += other.row;
@@ -65,6 +61,9 @@ struct MapPosition {
             rotateRight();
         }
     }
+
+   private:
+    MapPosition(int row, int col) : row(row), col(col) {}
 } __attribute__((aligned(8)));
 
 #include <functional>
