@@ -33,20 +33,27 @@ void Renderer::setup() {
     fontSize_.y = (int)fontSize_.y;
 }
 
-void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col, int row) const {
+void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, std::vector<Room::RoomPtr> neighbours, int col,
+                        int row) const {
     //        prefab.setDirection(Direction::EAST);
     auto& ecs = Services::Ecs::ref();
 
     auto& map = ecs.registry.ctx().at<Map>();
     const auto& roomsBFS = map.roomConnectionsBFS();
     const auto& lastRoom = roomsBFS.back();
-
+    auto cellView = ecs.registry.view<Position, CellTag, Inventory>();
     //      auto baricenter = room.baricenter();
-    for (auto& cellEntity : room->cells()) {
-        const auto& position = ecs.registry.get<Position>(cellEntity);
-        const auto& cell = ecs.registry.get<CellTag>(cellEntity);
-        const auto& inventory = ecs.registry.get<Inventory>(cellEntity);
+    for (const auto& cellEntity : room->cells()) {
+        //        const auto& position = ecs.registry.get<Position>(cellEntity);
+        //        const auto& cell = ecs.registry.get<CellTag>(cellEntity);
+        //        const auto& inventory = ecs.registry.get<Inventory>(cellEntity);
+        const auto& [position, cell, inventory] = cellView.get(cellEntity);
         auto isCurrent = room == heroRoom;
+
+        auto drawCol = col + position.col;
+        auto drawRow = row + position.row;
+
+        // TODO: optimize this
 
         if (position.row > 0 && position.col > 0) {
             if (cell.type == CellType::CELL_WALL) {
@@ -62,6 +69,11 @@ void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, int col, int
                     drawRectangle(col + position.col, row + position.row, DARKGRAY);
                 } else if (room == map.getRoom(lastRoom)) {
                     drawRectangle(col + position.col, row + position.row, RED);
+                } else if(std::find(neighbours.begin(), neighbours.end(), room) != neighbours.end()) {
+
+                    drawRectangle(col + position.col, row + position.row, DARKGREEN);
+
+
                 } else {
                     drawRectangle(col + position.col, row + position.row, DARKBROWN);
                 }
@@ -143,6 +155,10 @@ void Renderer::drawAstar(AStar& astar) const {
     for (auto& cell : astar.getPath()) {
         drawRectangle(cell.col, cell.row, BLUE);
     }
+}
+Renderer::Renderer(const RenderOptions& options) : options(options) {
+    //    auto& ecs = Services::Ecs::ref();
+    //    cellsView = ecs.registry.view<Position, CellTag, Inventory>();
 }
 
 // Returns 1 if the lines intersect, otherwise 0. In addition, if the lines

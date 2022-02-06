@@ -78,7 +78,7 @@ class Room {
 
     entt::entity getItemAt(int col, int row);
 
-    void removeItemAt(int col, int row);
+    void removeItemAt(int col, int row, entt::entity item);
 
     auto get(int col, int row) -> entt::entity;
 

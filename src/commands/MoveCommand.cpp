@@ -5,6 +5,7 @@
 #include "MoveCommand.h"
 
 #include "CameraSystem.h"
+#include "Map.h"
 
 void MoveCommand::execute(entt::entity& entity) {
     auto& ecs = Services::Ecs::ref();
@@ -12,13 +13,11 @@ void MoveCommand::execute(entt::entity& entity) {
     auto& map = ecs.registry.ctx().at<Map>();
     auto& position = ecs.registry.get<Position>(entity);
 
-    spdlog::debug("MoveCommand: hero ({},{}), dx={}, dy={}, walkable? {}",
-                  position.col, position.row, dx, dy,
+    spdlog::debug("MoveCommand: hero ({},{}), dx={}, dy={}, walkable? {}", position.col, position.row, dx, dy,
                   map.isWalkable(position.col + dx, position.row + dy));
 
-    if (map.isWalkable(
-            position.col + dx,
-            position.row + dy)) {  // se la cella di arrivo é camminabile
+    if (map.isWalkable(position.col + dx,
+                       position.row + dy)) {  // se la cella di arrivo é camminabile
         position.col += dx;
         position.row += dy;
 
@@ -27,17 +26,17 @@ void MoveCommand::execute(entt::entity& entity) {
         CameraSystem::updateCamera(position.col, position.row);
         CameraSystem::updateViewport();
 
-        auto item =
-            map.getItemAt(position.col, position.row);  // prendi l'oggetto
+        auto item = map.getItemAt(position.col, position.row);  // prendi l'oggetto
         // nella cella di arrivo
         if (item != entt::null) {
-            const auto name = ecs.registry.get<Named>(item).name;
+            const auto named = ecs.registry.get<Named>(item);
+            auto name = named.name;
             fmt::print("MoveCommand: found item {}\n", name);
             ecs.registry.ctx().at<EventStore>().store(new ItemFoundEvent(item));
             auto& inventory = ecs.registry.get<Inventory>(entity);
             inventory.pickUp(item);
 
-            map.removeItemAt(position.col, position.row);
+            map.removeItemAt(position.col, position.row, item);
         }
     }
 }

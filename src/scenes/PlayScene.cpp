@@ -15,6 +15,8 @@
 #include "Renderer.h"
 #include "SceneManager.h"
 #include "Services.h"
+#include "StatsOverlay.h"
+#include "Systems.h"
 #include "UIDebugOverlay.h"
 
 void PlayScene::handleInput() {
@@ -108,6 +110,7 @@ void PlayScene::render() {
 
     map.draw(heroRoom_);
     Renderer::getInstance().drawEntity({position.col, position.row, "@"});
+    renderMonsterSystem();
     //        renderer_->drawRays(heroRoom, hero_);
     if (display_astar_) {
         Renderer::getInstance().drawAstar(astar_);
@@ -133,8 +136,11 @@ PlayScene::PlayScene() : waitUserInput_(true), alreadyStarted_(false) {
     auto debugUi = new UIDebugOverlay();
     overlays_.push_back(std::shared_ptr<UIDebugOverlay>(debugUi));
 
-    auto logUi = new LogOverlay({(float)options.width - 300, 0}, {300, (float)options.height});
+    auto logUi = new LogOverlay({(float)options.width - 300, 0}, {300, 400.0f});
     overlays_.push_back(std::shared_ptr<LogOverlay>(logUi));
+
+    auto statsUI = new StatsOverlay({(float)options.width - 300, 400.0f}, {300, 150.0f});
+    overlays_.push_back(std::shared_ptr<StatsOverlay>(statsUI));
 }
 
 void PlayScene::onLoad() {
@@ -215,6 +221,8 @@ void PlayScene::generateMap() {
     //    Astar astar(walkable);
 
     for (int i = 0; i < 15; i++) handleRoomCreate(map);
+
+    map.generateMonsters();
 }
 
 Rc<Command> PlayScene::handleUserInput() {

@@ -20,6 +20,12 @@ struct Inventory {
         items.emplace_back(item);
         fmt::print("Hero has {} items\n", items.size());
     }
+
+    void removeItem(entt::entity item) {
+        fmt::print("Remove item\n");
+        items.erase(std::remove(items.begin(), items.end(), item), items.end());
+        fmt::print("left {} items\n", items.size());
+    }
 };
 
 #endif  // RL_DA_ZERO_SRC_ENTITY_COMPONENTS_INVENTORY_H

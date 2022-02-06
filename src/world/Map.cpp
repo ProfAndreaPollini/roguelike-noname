@@ -11,7 +11,7 @@
 auto Map::getRooms() const -> const std::vector<RoomPtr> { return rooms_.elements(); }
 void Map::draw(const Map::RoomPtr& heroRoom) const {
     for (const auto& room : rooms_.elements()) {
-        Renderer::getInstance().drawRoom(room, heroRoom, 0, 0);
+        Renderer::getInstance().drawRoom(room, heroRoom, rooms_.getNeighbors(heroRoom), 0, 0);
     }
 }
 auto Map::roomWithConnectionCount() const -> int {

@@ -5,8 +5,6 @@
 #ifndef RL_DA_ZERO_COMMAND_H
 #define RL_DA_ZERO_COMMAND_H
 
-#include "Entity.h"
-#include "Map.h"
 #include "entt/entity/entity.hpp"
 
 class Command {

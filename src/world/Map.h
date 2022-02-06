@@ -11,9 +11,11 @@
 #include <memory>
 
 #include "Cell.h"
+#include "Entity.h"
 #include "Graph.h"
 #include "Room.h"
 #include "SwordItem.h"
+#include "util.h"
 
 class Map {
    public:
@@ -78,20 +80,22 @@ class Map {
     auto addPrefabTo(int roomIndex, MapPrefab& prefab) -> bool;
 
     auto getItemAt(int col, int row) -> entt::entity {
-        for (const auto& room : rooms_.elements()) {
-            if (room->contains(col, row)) {
-                return room->getItemAt(col, row);
-            }
+        const auto room = queryRoom(col, row);
+        // for (const auto& room : rooms_.elements()) {
+        if (room->contains(col, row)) {
+            return room->getItemAt(col, row);
         }
+        //}
         return entt::null;
     }
 
-    void removeItemAt(int col, int row) {
-        for (const auto& room : rooms_.elements()) {
-            if (room->contains(col, row)) {
-                room->removeItemAt(col, row);
-            }
+    void removeItemAt(int col, int row, entt::entity item) {
+        const auto room = queryRoom(col, row);
+        // for (const auto& room : rooms_.elements()) {
+        if (room->contains(col, row)) {
+            room->removeItemAt(col, row, item);
         }
+        //}
     }
 
     [[maybe_unused]] auto getRoom(int index) const -> const Room& { return *rooms_.elements()[index]; }
@@ -113,6 +117,23 @@ class Map {
     std::vector<int> roomConnectionsBFS() {
         std::vector<int> roomsBFS = rooms_.BFS();
         return roomsBFS;
+    }
+
+    void generateMonsters() {
+        //        std::vector<int> roomsBFS = rooms_.BFS();
+        //        for (int i = 0; i < roomsBFS.size(); i++) {
+        //            auto room = rooms_.elementAt(roomsBFS[i]);
+        //            const auto& cells = room->getWalkablePositions();
+        //            if (i > 2) {
+        //                if (Rng::getInstance().getRandomInt(0, 100) < (i / roomsBFS.size()) * 100) {
+        //                    //                    auto monster =
+        //                    //                        createMonster(select_random(cells,
+        //                    Rng::getInstance().getRandomInt(0,
+        //                    //                        cells.size())));
+        //                    //                    //                    room->addMonster(MonsterType::kGoblin);
+        //                }
+        //            }
+        //        }
     }
 
    private:

@@ -8,6 +8,7 @@
 #include "components/Actions.h"
 #include "components/Inventory.h"
 #include "components/Position.h"
+#include "components/Stats.h"
 #include "components/Tags.h"
 
 // Hero::Hero() : Entity{15, 10} {}
@@ -21,4 +22,8 @@ void Hero::createHero() {
     ecs.registry.emplace<HeroTag>(entity);
     ecs.registry.emplace<Actions>(entity);
     ecs.registry.emplace<Inventory>(entity);
+
+    auto& health = ecs.registry.emplace<Health>(entity);
+    health.maxHealth = 100;
+    health.currentHealth = 100;
 }

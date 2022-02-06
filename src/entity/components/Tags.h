@@ -18,6 +18,10 @@ enum class ItemType {
 };
 
 struct HeroTag {};
+struct MonsterTag {
+    char glyph;
+};
+
 struct ItemTag {
     ItemType type;
 };

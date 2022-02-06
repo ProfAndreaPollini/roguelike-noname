@@ -6,6 +6,7 @@
 #define RL_DA_ZERO_SRC_ENTITY_COMPONENTS_ACTIONS_H
 
 #include <Command.h>
+#include <spdlog/spdlog.h>
 
 #include <vector>
 

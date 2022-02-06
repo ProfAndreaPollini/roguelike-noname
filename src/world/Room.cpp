@@ -133,10 +133,13 @@ auto Room::get(int col, int row) -> entt::entity {
     //        }
     //    }
 }
-void Room::removeItemAt(int col, int row) {
+void Room::removeItemAt(int col, int row, entt::entity item) {
     auto& ecs = Services::Ecs::ref();
     auto cell = get(col, row);
-    ecs.registry.destroy(cell);
+    //    ecs.registry.destroy(cell);
+    auto& inventory = ecs.registry.get<Inventory>(cell);
+    inventory.removeItem(item);
+
     //    for (auto& cell : cells_) {
     //        if (cell.coords().col == col && cell.coords().row == row) {
     //            cell.cell.item = nullptr;
