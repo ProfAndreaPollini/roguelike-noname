@@ -4,6 +4,10 @@
 
 #include "Renderer.h"
 
+#include <easy/profiler.h>
+
+#include <ranges>
+
 #include "GameCtx.h"
 #include "MapAlgorithms.h"
 #include "Services.h"
@@ -19,7 +23,7 @@ void Renderer::prepare() const {
 
 void Renderer::draw() const {
     //    DrawText("@", 190, 200, 20, RED);
-    EndMode2D();
+    //    EndMode2D();
     EndDrawing();
 }
 
@@ -33,120 +37,63 @@ void Renderer::setup() {
     fontSize_.y = (int)fontSize_.y;
 }
 
-void Renderer::drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, std::vector<Room::RoomPtr> neighbours, int col,
-                        int row) const {
+void Renderer::drawRoom(const Room::RoomPtr& room, entt::entity heroRoomEntity, std::set<entt::entity> neighbours,
+                        const Viewport& viewport) const {
     //        prefab.setDirection(Direction::EAST);
+    EASY_FUNCTION(profiler::colors::Magenta);
+    EASY_BLOCK("get variables");
     auto& ecs = Services::Ecs::ref();
 
     auto& map = ecs.registry.ctx().at<Map>();
     const auto& roomsBFS = map.roomConnectionsBFS();
     const auto& lastRoom = roomsBFS.back();
-    auto cellView = ecs.registry.view<Position, CellTag, Inventory>();
+    auto cellView = ecs.registry.view<Position, CellTag, RenderInfo>();
+    const auto& doors = map.doors();
+    EASY_END_BLOCK;
     //      auto baricenter = room.baricenter();
-    for (const auto& cellEntity : room->cells()) {
-        //        const auto& position = ecs.registry.get<Position>(cellEntity);
-        //        const auto& cell = ecs.registry.get<CellTag>(cellEntity);
-        //        const auto& inventory = ecs.registry.get<Inventory>(cellEntity);
-        const auto& [position, cell, inventory] = cellView.get(cellEntity);
-        auto isCurrent = room == heroRoom;
+    EASY_BLOCK("cell loop");
 
-        auto drawCol = col + position.col;
-        auto drawRow = row + position.row;
+    auto cells_ = room->cells();
 
-        // TODO: optimize this
-
-        if (position.row > 0 && position.col > 0) {
-            if (cell.type == CellType::CELL_WALL) {
-                drawRectangle(col + position.col, row + position.row, GRAY);
-
-                drawText("#", col + position.col, row + position.row, BLUE);
-            } else if (cell.type == CellType::CELL_DEBUG) {
-                drawRectangle(col + position.col, row + position.row, ORANGE);
-
-                drawText("#", col + position.col, row + position.row, WHITE);
-            } else if (cell.type == CellType::CELL_FLOOR) {
-                if (isCurrent) {
-                    drawRectangle(col + position.col, row + position.row, DARKGRAY);
-                } else if (room == map.getRoom(lastRoom)) {
-                    drawRectangle(col + position.col, row + position.row, RED);
-                } else if(std::find(neighbours.begin(), neighbours.end(), room) != neighbours.end()) {
-
-                    drawRectangle(col + position.col, row + position.row, DARKGREEN);
-
-
-                } else {
-                    drawRectangle(col + position.col, row + position.row, DARKBROWN);
-                }
-                if (inventory.hasItems()) {
-                    drawText("*", col + position.col, row + position.row, BLUE);
-                }
-                //                DrawText(".", std::abs(col +
-                //                cell.coords().col) * 14, std::abs(row +
-                //                cell.coords().row) * 20, 20, RED);
-            } else {
-                DrawText("?", std::abs(col + position.col) * 14, std::abs(row + position.row) * 20, 20, RED);
-                fmt::print("??? {} {}\n", position.col, position.row);
-            }
+    for (const auto cellEntity : room->cells()) {
+        EASY_BLOCK("test if it is a door");
+        if (doors.contains(cellEntity)) {
+            continue;
         }
+        EASY_END_BLOCK;
+        EASY_BLOCK("entt get");
 
-        //        if (cell.coords().row > 0 && cell.coords().col > 0) {
-        //            if (cell.cell.type == CellType::CELL_WALL) {
-        //                drawRectangle(col + cell.coords().col, row + cell.coords().row, GRAY);
-        //
-        //                drawText("#", col + cell.coords().col, row + cell.coords().row, BLUE);
-        //            } else if (cell.cell.type == CellType::CELL_FLOOR) {
-        //                if (isCurrent) {
-        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, DARKGRAY);
-        //                } else if (room == map.getRoom(lastRoom)) {
-        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, RED);
-        //                } else {
-        //                    drawRectangle(col + cell.coords().col, row + cell.coords().row, DARKBROWN);
-        //                }
-        //                if (cell.cell.item != nullptr) {
-        //                    drawText("*", col + cell.coords().col, row + cell.coords().row, BLUE);
-        //                }
-        //                //                DrawText(".", std::abs(col +
-        //                //                cell.coords().col) * 14, std::abs(row +
-        //                //                cell.coords().row) * 20, 20, RED);
-        //            } else {
-        //                DrawText("?", std::abs(col + cell.coords().col) * 14, std::abs(row + cell.coords().row) * 20,
-        //                20, RED); fmt::print("??? {} {}\n", cell.coords().col, cell.coords().row);
-        //            }
-        //        }
-    }
+        const auto& [position, cell, renderInfo] = cellView.get(cellEntity);
 
-    for (const auto& connectorEntity : room->connectors()) {
-        const auto& connector = ecs.registry.get<ConnectorTag>(connectorEntity);
-        auto coords = connector.position;
-        auto direction = connector.direction;
-        if (coords.row > 0 && coords.col > 0) {
-            raylib::Color c;
-            switch (direction) {
-                case Direction::NORTH:
-                    c = PURPLE;
-                    drawRectangle(coords.col, coords.row /*-10*/, c);
-                    break;
-                case Direction::SOUTH:
-                    c = BLUE;
-                    drawRectangle(coords.col, coords.row /*+10*/, c);
-                    break;
-                case Direction::EAST:
-                    c = RED;
-                    drawRectangle(coords.col /*+10*/, coords.row, c);
-                    break;
-                case Direction::WEST:
-                    c = GREEN;
-                    drawRectangle(coords.col /*-10*/, coords.row, c);
-                    break;
-                default:
-                    c = BLACK;
-                    break;
-            }
+        if (!viewport.contains(position.col, position.row)) continue;
+        //        auto isCurrent = room == heroRoom;
+        auto inNeighbourRoom = neighbours.contains(cell.room);
+        auto isVisited = room->visited();
+        if (!isVisited && !inNeighbourRoom) continue;
 
-            drawRectangle(col + coords.col, row + coords.row, c);
-            drawText(">", (col + coords.col), (row + coords.row), BLACK);
+        auto drawCol = position.col;
+        auto drawRow = position.row;
+
+        if (position.row < 0 || position.col < 0) continue;
+
+        if (isVisited) {
+            drawRectangle(drawCol, drawRow, renderInfo.bgColor);
+            drawText(TextFormat("%c", renderInfo.glyph), drawCol, drawRow, renderInfo.textColor);
+        } else if (inNeighbourRoom) {
+            drawRectangle(drawCol, drawRow, renderInfo.bgColor);
+            drawRectangle(position.col, position.row, {50, 50, 50, 50});
         }
     }
+    EASY_END_BLOCK;
+    EASY_BLOCK("door loop");
+    for (auto door : doors) {
+        const auto& position = ecs.registry.get<Position>(door);
+        const auto& info = ecs.registry.get<DoorTag>(door);
+        auto drawCol = position.col;
+        auto drawRow = position.row;
+        drawText(info.glyph, drawCol, drawRow, YELLOW);
+    }
+    EASY_END_BLOCK;
 }
 void Renderer::drawAstar(AStar& astar) const {
     for (auto& cell : astar.positions()) {

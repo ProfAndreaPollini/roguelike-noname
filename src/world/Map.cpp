@@ -10,9 +10,10 @@
 
 auto Map::getRooms() const -> const std::vector<RoomPtr> { return rooms_.elements(); }
 void Map::draw(const Map::RoomPtr& heroRoom) const {
-    for (const auto& room : rooms_.elements()) {
-        Renderer::getInstance().drawRoom(room, heroRoom, rooms_.getNeighbors(heroRoom), 0, 0);
-    }
+    //    const auto& neighbours = rooms_.getNeighborsId(heroRoom);
+    //    for (const auto& room : rooms_.elements()) {
+    //        Renderer::getInstance().drawRoom(room, heroRoom, neighbours, 0, 0);
+    //    }
 }
 auto Map::roomWithConnectionCount() const -> int {
     int count = 0;
@@ -79,20 +80,7 @@ auto Map::addPrefabTo(int roomIndex, MapPrefab& prefab) -> bool {
             connectorInfo.position.col -= 1;
             break;
     }
-    //    switch (selectedConnectorDir) {
-    //        case Direction::NORTH:
-    //            selectedConnectorPos.row -= 1;
-    //            break;
-    //        case Direction::EAST:
-    //            selectedConnectorPos.col += 1;
-    //            break;
-    //        case Direction::SOUTH:
-    //            selectedConnectorPos.row += 1;
-    //            break;
-    //        case Direction::WEST:
-    //            selectedConnectorPos.col -= 1;
-    //            break;
-    //    }
+
     prefab.setTranslation(connectorInfo.position);
 
     if (overlaps(prefab)) {
@@ -100,13 +88,22 @@ auto Map::addPrefabTo(int roomIndex, MapPrefab& prefab) -> bool {
         return false;
     }
 
+    // make the connector a floor tile
     room->removeConnector(connectorEntity);
     prefab.removeSelectedConnector();
 
+    // add the "tentative"door entity to the map
+    doors_.insert(connectorEntity);
+
     auto newRoom = Room::createFromMapElement(prefab);
-    newRoom->spawnItems();
+    //    newRoom->spawnItems();
     addRoom(newRoom);
     rooms_.addEdge(room, newRoom);
 
     return true;
 }
+// void Map::makeDoor(entt::entity cellEntity) {
+//     auto& ecs = Services::Ecs::ref();
+//     ecs.registry.remove<CellTag>(cellEntity);
+//     ecs.registry.emplace<DoorTag>(cellEntity);
+// }

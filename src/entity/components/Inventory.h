@@ -26,6 +26,10 @@ struct Inventory {
         items.erase(std::remove(items.begin(), items.end(), item), items.end());
         fmt::print("left {} items\n", items.size());
     }
+
+    bool hasItem(entt::entity item) {
+        return std::find(items.begin(), items.end(), item) != items.end();
+    }
 };
 
 #endif  // RL_DA_ZERO_SRC_ENTITY_COMPONENTS_INVENTORY_H

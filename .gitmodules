@@ -13,3 +13,13 @@
 [submodule ".\\vendor\\entt"]
 	path = .\\vendor\\entt
 	url = https://github.com/skypjack/entt.git
+[submodule "vendor/easy_profiler"]
+	path = vendor/easy_profiler
+	url = https://github.com/yse/easy_profiler.git
+[submodule "vendor/zlib"]
+	path = vendor/zlib
+	url = https://github.com/madler/zlib.git
+[submodule "vendor/imgui"]
+	path = vendor/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking

@@ -10,6 +10,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -37,9 +38,7 @@ class Graph {
 
     Graph() = default;
 
-    explicit Graph(ElementPtr rootElement) : root_(rootElement) {
-        addElement(rootElement);
-    }
+    explicit Graph(ElementPtr rootElement) : root_(rootElement) { addElement(rootElement); }
 
     auto getRandomElement() const -> ElementPtr {
         auto index = Rng::getInstance().getRandomInt(0, elements_.size() - 1);
@@ -60,12 +59,10 @@ class Graph {
             return;
         }
         // aggiungi gli elementi non esistenti
-        if (std::find(elements_.begin(), elements_.end(), elementFrom) ==
-            elements_.end()) {
+        if (std::find(elements_.begin(), elements_.end(), elementFrom) == elements_.end()) {
             addElement(elementFrom);
         }
-        if (std::find(elements_.begin(), elements_.end(), elementTo) ==
-            elements_.end()) {
+        if (std::find(elements_.begin(), elements_.end(), elementTo) == elements_.end()) {
             addElement(elementTo);
         }
         // aggiungi l'edge
@@ -115,8 +112,7 @@ class Graph {
             // vertex s. If a adjacent has not been visited,
             // then mark it visited and enqueue it
             for (const auto& connectedElement : connectedElements) {
-                auto elementIdx = std::find(elements_.begin(), elements_.end(),
-                                            connectedElement);
+                auto elementIdx = std::find(elements_.begin(), elements_.end(), connectedElement);
                 auto elementPos = std::distance(elements_.begin(), elementIdx);
 
                 if (!visited[elementPos]) {
@@ -128,6 +124,9 @@ class Graph {
         return ret;
     }
 
+    // get edges
+    auto edges() const { return edges_; }
+
    private:
     std::vector<ElementPtr> elements_;
     std::unordered_map<ElementPtr, std::vector<Edge>> edges_;
@@ -138,11 +137,9 @@ template <typename T>
 class LatticeGraph : public Graph<T> {
    public:
     LatticeGraph() = default;
-    [[maybe_unused]] explicit LatticeGraph(typename Graph<T>::ElementPtr root)
-        : Graph<T>(root) {}
+    [[maybe_unused]] explicit LatticeGraph(typename Graph<T>::ElementPtr root) : Graph<T>(root) {}
 
-    void addEdge(typename Graph<T>::ElementPtr elementFrom,
-                 typename Graph<T>::ElementPtr elementTo) override {
+    void addEdge(typename Graph<T>::ElementPtr elementFrom, typename Graph<T>::ElementPtr elementTo) override {
         Graph::addEdge(elementFrom, elementTo);
         Graph::addEdge(elementTo, elementFrom);
     }
@@ -152,9 +149,7 @@ template <typename T, typename DATA>
 class LatticeGraphWithData : public LatticeGraph<T> {
    public:
     LatticeGraphWithData() = default;
-    [[maybe_unused]] explicit LatticeGraphWithData(
-        typename Graph<T>::ElementPtr root)
-        : LatticeGraph<T>(root) {}
+    [[maybe_unused]] explicit LatticeGraphWithData(typename Graph<T>::ElementPtr root) : LatticeGraph<T>(root) {}
 
     void addElement(typename Graph<T>::ElementPtr element, DATA data) override {
         Graph::addElement(element);

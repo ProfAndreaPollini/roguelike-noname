@@ -3,3 +3,11 @@
 //
 
 #include "UIDebugOverlay.h"
+
+#include "raylib-cpp.hpp"
+
+void UIDebugOverlay::draw() const {
+    auto fps = GetFPS();
+    //        auto fps = profiler::main_thread_frameTime();
+    raylib::DrawText(TextFormat("FPS: %d", fps), 10, 10, 20, LIGHTGRAY);
+}

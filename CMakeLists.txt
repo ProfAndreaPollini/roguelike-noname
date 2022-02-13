@@ -88,7 +88,7 @@ endif()
 add_subdirectory(vendor/fmt)
 add_subdirectory(vendor/json)
 add_subdirectory(vendor/entt)
-
+add_subdirectory(vendor/easy_profiler)
 
 #find_package(nlohmann_json 3.10.5 REQUIRED)
 
@@ -96,6 +96,13 @@ add_executable(rl_da_zero main.cpp)
 
 add_subdirectory(src)
 
+
+add_subdirectory(vendor/zlib)
+
+
+add_definitions(-DBUILD_WITH_EASY_PROFILER)
+add_definitions(-DWITH_GZFILEOP)
+add_definitions(-DZLIB_COMPAT)
 
 target_link_libraries(rl_da_zero PRIVATE fmt::fmt-header-only)
 #set(raylib_VERBOSE 1)
@@ -105,6 +112,8 @@ target_link_libraries(rl_da_zero PRIVATE spdlog::spdlog_header_only)
 find_package(spdlog CONFIG REQUIRED)
 target_link_libraries(rl_da_zero PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
 target_link_libraries(rl_da_zero PRIVATE EnTT::EnTT)
+target_link_libraries(rl_da_zero PRIVATE easy_profiler)
+target_link_libraries(rl_da_zero PRIVATE zlibstatic)
 #target_link_libraries(rl_da_zero PRIVATE  project_warnings) # connect project_options to myprogram
 
 

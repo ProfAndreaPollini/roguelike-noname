@@ -5,6 +5,8 @@
 #ifndef RL_DA_ZERO_SRC_WORLD_MAPELEMENT_CPP_MAPPOSITION_H
 #define RL_DA_ZERO_SRC_WORLD_MAPELEMENT_CPP_MAPPOSITION_H
 
+#include "spdlog/spdlog.h"
+
 struct MapPosition {
     int row{0};
     int col{0};
@@ -17,6 +19,10 @@ struct MapPosition {
     }
 
     MapPosition() = default;
+    MapPosition(int row, int col) : row(row), col(col) {}
+    MapPosition& operator=(const MapPosition&) = default;
+    MapPosition& operator=(MapPosition&&) = default;
+    MapPosition(const MapPosition&) = default;
 
     void setRow(int row) { this->row = row; }
 
@@ -24,7 +30,7 @@ struct MapPosition {
 
     bool operator==(const MapPosition& other) const { return row == other.row && col == other.col; }
 
-    bool operator!=(const MapPosition& other) const { return !(*this == other); }
+    bool operator!=(const MapPosition& other) const { return !(row == other.row && col == other.col); }
 
     MapPosition operator+(const MapPosition& other) const { return {row + other.row, col + other.col}; }
 
@@ -40,6 +46,20 @@ struct MapPosition {
         row += other.row;
         col += other.col;
         return *this;
+    }
+
+    int operator<=>(const MapPosition& other) const {
+        if (row < other.row) {
+            return -1;
+        } else if (row > other.row) {
+            return 1;
+        } else if (col < other.col) {
+            return -1;
+        } else if (col > other.col) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     MapPosition operator-=(const MapPosition& other) {
@@ -63,7 +83,7 @@ struct MapPosition {
     }
 
    private:
-    MapPosition(int row, int col) : row(row), col(col) {}
+    //    MapPosition(int row, int col) : row(row), col(col) {}
 } __attribute__((aligned(8)));
 
 #include <functional>
@@ -76,6 +96,15 @@ struct std::hash<MapPosition> {
     }
 };
 
+//namespace std {
+//template <>
+//struct less<MapPosition> {
+//    bool operator()(const MapPosition& lhs, const MapPosition& rhs) const {
+//        spdlog::info("lhs: {} , rhs: {}", lhs.row * 100000 + lhs.col, rhs.col + rhs.row * 10000);
+//        return lhs.row * 100000 + lhs.col < rhs.col + rhs.row * 10000;
+//    }
+//};
+//}  // namespace std
 #include <algorithm>
 #include <iterator>
 #include <random>

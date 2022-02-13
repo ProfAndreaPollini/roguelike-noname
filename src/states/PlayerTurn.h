@@ -5,23 +5,15 @@
 #ifndef RL_DA_ZERO_PLAYERTURN_H
 #define RL_DA_ZERO_PLAYERTURN_H
 
-
 #include "GameState.h"
 
 class PlayerTurn : public GameState {
-public:
-
-
-
-    Command* handleInput() override;
+   public:
+    Command* handleInput() override { return nullptr; }
 
     void update() override {}
 
     ~PlayerTurn() override = default;
-
-
-
 };
 
-
-#endif //RL_DA_ZERO_PLAYERTURN_H
+#endif  // RL_DA_ZERO_PLAYERTURN_H

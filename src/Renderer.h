@@ -20,7 +20,9 @@
 #include "components/MapPosition.h"
 #include "components/Position.h"
 #include "components/Tags.h"
+#include "components/Viewport.h"
 #include "entt/entity/runtime_view.hpp"
+#include "entt/entt.hpp"
 #include "extras/raygui.h"
 #include "raylib-cpp.hpp"
 
@@ -45,7 +47,7 @@ struct DrawEntityInfo {
 
     DrawEntityInfo() : x(0), y(0), c(".") {}
 
-    [[maybe_unused]] DrawEntityInfo(int x, int y, const char* c) : x(x), y(y), c(c) {}
+    DrawEntityInfo(int x, int y, const char* c) : x(x), y(y), c(c) {}
 };
 
 struct DrawCellInfo {
@@ -120,8 +122,8 @@ class Renderer {
 
     void drawAstar(AStar& astar) const;
 
-    void drawRoom(Room::RoomPtr room, Room::RoomPtr heroRoom, std::vector<Room::RoomPtr> neighbours, int col,
-                  int row) const;
+    void drawRoom(const Room::RoomPtr& room, entt::entity heroRoomEntity, std::set<entt::entity> neighbours,
+                  const Viewport& viewport) const;
 
     [[maybe_unused]] void drawUi(const DrawUIInfo& uiInfo) {
         int y = 10;

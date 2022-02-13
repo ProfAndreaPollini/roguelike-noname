@@ -14,13 +14,14 @@
 
 class MoveCommand : public Command {
    public:
-    MoveCommand(int dx, int dy) : dx(dx), dy(dy) {}
+    MoveCommand(entt::entity entity, int dx, int dy) : dx(dx), dy(dy), entity_{entity} {}
 
     virtual ~MoveCommand() = default;
 
-    void execute(entt::entity& entity) override;
+    void execute() override;
 
    private:
     int dx;
     int dy;
+    entt::entity entity_;
 };

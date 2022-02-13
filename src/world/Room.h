@@ -39,7 +39,10 @@ class Room {
     Room();
     ~Room() = default;
 
-    [[maybe_unused]] void addConnectedRoom(RoomPtr room) { connectedRooms_.push_back(room); }
+    bool visited() const { return visited_; }
+    void setVisited(bool visited) { visited_ = visited; }
+
+    //    [[maybe_unused]] void addConnectedRoom(RoomPtr room) { connectedRooms_.push_back(room); }
 
     static auto createFromMapElement(MapPrefab& mapElement) -> RoomPtr;
 
@@ -64,17 +67,17 @@ class Room {
 
     [[nodiscard]] auto connectorCount() const -> int;
 
-    void spawnItems();
+    [[maybe_unused]] void spawnItems();
 
     [[nodiscard]] bool overlaps(const Room& other) const;
 
-    void removeElement(const RoomElement& element);
+    [[maybe_unused]] void removeElement(const RoomElement& element);
 
     void removeConnector(const RoomConnector& connector);
 
     auto isWalkable(int col, int row) -> bool;
 
-    auto getWalkablePositions() const -> std::vector<MapPosition>;
+    auto getWalkablePositions() const -> std::set<MapPosition>;
 
     entt::entity getItemAt(int col, int row);
 
@@ -84,12 +87,16 @@ class Room {
 
     auto contains(int col, int row) -> bool;
 
+    void finalize();
+
+    entt::entity id() const { return id_; }
+
    private:
-    std::vector<RoomPtr> connectedRooms_;
+    //    std::vector<RoomPtr> connectedRooms_;
     std::set<RoomElement> cells_;
     std::set<RoomConnector> connectors_;
-
-    entt::entity entity_;
+    bool visited_;
+    entt::entity id_;
 };
 
 #endif  // RL_DA_ZERO_ROOM_H

@@ -13,6 +13,7 @@
 #include "components/Inventory.h"
 #include "components/Named.h"
 #include "components/Position.h"
+#include "components/RenderInfo.h"
 #include "components/Tags.h"
 
 Room::RoomPtr Room::createFromMapElement(MapPrefab& mapElement) {
@@ -26,6 +27,14 @@ Room::RoomPtr Room::createFromMapElement(MapPrefab& mapElement) {
         if (cell.value == 0xffffffff) {
             cellTag.type = CellType::CELL_FLOOR;
         }
+        cellTag.room = room->id();
+
+        auto& renderInfo = ecs.registry.emplace<RenderInfo>(cellEntity);
+
+        const auto info = RenderSpritesheet[cellTag.type];
+        renderInfo.glyph = info.glyph;
+        renderInfo.textColor = info.textColor;
+        renderInfo.bgColor = info.bgColor;
 
         auto& position = ecs.registry.emplace<Position>(cellEntity);
         position.setRow(cell.coords.row);
@@ -65,11 +74,12 @@ Room::RoomPtr Room::createFromMapElement(MapPrefab& mapElement) {
 
 Room::Room() {
     auto& ecs = Services::Ecs::ref();
-    entity_ = ecs.registry.create();
-    ecs.registry.emplace<RoomTag>(entity_);
+    id_ = ecs.registry.create();
+    ecs.registry.emplace<RoomTag>(id_);
+    visited_ = false;
 }
 
-void Room::spawnItems() {
+[[maybe_unused]] void Room::spawnItems() {
     auto& ecs = Services::Ecs::ref();
     for (int i = 0; i < 5; i++) {
         if (Rng::getInstance().getRandomInt(0, 100) < 50) {
@@ -170,25 +180,49 @@ entt::entity Room::getItemAt(int col, int row) {
     //    }
     //    return nullptr;
 }
-auto Room::getWalkablePositions() const -> std::vector<MapPosition> {
+auto Room::getWalkablePositions() const -> std::set<MapPosition> {
     auto& ecs = Services::Ecs::ref();
-    std::vector<MapPosition> positions;
-    for (const auto& cell : cells_) {
-        const auto& position = ecs.registry.get<Position>(cell);
-        positions.push_back(position);
+    std::set<MapPosition> positions;
+
+    auto view = ecs.registry.view<Position, CellTag>();
+    //    spdlog::info("-----------------------------------------------------");
+    for (const entt::entity& cellEntity : cells()) {
+        if (cells_.contains(cellEntity)) {
+            const auto [position, cellTag] = view.get<Position, CellTag>(cellEntity);
+            auto isWalkable = Cell::isWalkable(cellTag.type);
+            //            spdlog::info("{} [{}]: {} {} {}", positions.size(), static_cast<int>(cellEntity),
+            //            position.col,
+            //                         position.row, isWalkable);
+            //            auto toAdd = MapPosition::fromRowCol(position.row, position.col);
+            if (isWalkable) {
+                //                spdlog::info("Adding {}", positions.contains(toAdd));
+
+                positions.insert(position);
+                //                if (it.second) {
+                //                    spdlog::info("Inserted element");
+                //                }
+            }
+        }
     }
-    //        if (cell.cell.isWalkable()) {
-    //            positions.push_back(cell.coords());
-    //        }
+    spdlog::info(">> {}", positions.size());
+
     return positions;
 }
 
 auto Room::isWalkable(int col, int row) -> bool {
     auto& ecs = Services::Ecs::ref();
     auto cell = get(col, row);
-    auto& cellInfo = ecs.registry.get<CellTag>(cell);
+    if (ecs.registry.any_of<CellTag>(cell)) {
+        auto& cellInfo = ecs.registry.get<CellTag>(cell);
 
-    return Cell::isWalkable(cellInfo.type);
+        return Cell::isWalkable(cellInfo.type);
+    } else if (ecs.registry.any_of<DoorTag>(cell)) {
+        auto& doorInfo = ecs.registry.get<DoorTag>(cell);
+        return doorInfo.isOpen;
+    } else {
+        return false;
+    }
+
     //    for (const auto& cell : cells_) {
     //        if (cell.coords().col == col && cell.coords().row == row) {
     //            return cell.cell.isWalkable();
@@ -203,10 +237,17 @@ void Room::removeConnector(const Room::RoomConnector& connector) {
     auto connectorInfo = ecs.registry.get<ConnectorTag>(connector);
     const auto connectorPosition = connectorInfo.position;
     // non é piú un connettore
-    ecs.registry.emplace<CellTag>(connector, CellType::CELL_FLOOR);  // ma una cella
+    const auto& cellTag = ecs.registry.emplace<CellTag>(connector, CellType::CELL_FLOOR);  // ma una cella
     auto& position = ecs.registry.emplace<Position>(connector);
     position.col = connectorPosition.col;
     position.row = connectorPosition.row;
+
+    auto& renderInfo = ecs.registry.emplace<RenderInfo>(connector);
+
+    const auto info = RenderSpritesheet[cellTag.type];
+    renderInfo.glyph = info.glyph;
+    renderInfo.textColor = info.textColor;
+    renderInfo.bgColor = info.bgColor;
 
     ecs.registry.emplace<Inventory>(connector);
     ecs.registry.remove<ConnectorTag>(connector);
@@ -227,7 +268,7 @@ void Room::removeConnector(const Room::RoomConnector& connector) {
     //         static_cast<unsigned int>(0xffffffff)}};
     //    cells_.push_back(element);
 }
-void Room::removeElement(const Room::RoomElement& element) {
+[[maybe_unused]] void Room::removeElement(const Room::RoomElement& element) {
     cells_.insert(element);
     //    cells_.erase(std::remove_if(cells_.begin(), cells_.end(),
     //                                [&element](const RoomElement& cell) {
@@ -235,4 +276,31 @@ void Room::removeElement(const Room::RoomElement& element) {
     //                                      element.position.coords;
     //                                }),
     //                 cells_.end());
+}
+void Room::finalize() {
+    auto& ecs = Services::Ecs::ref();
+    //    auto cell = get(col, row);
+
+    for (auto& connector : connectors_) {
+        auto& connectorInfo = ecs.registry.get<ConnectorTag>(connector);
+        const auto connectorPosition = connectorInfo.position;
+        // non é piú un connettore
+        const auto& cellTag = ecs.registry.emplace<CellTag>(connector, CellType::CELL_WALL);  // ma una cella
+        auto& position = ecs.registry.emplace<Position>(connector);
+        position.col = connectorPosition.col;
+        position.row = connectorPosition.row;
+
+        auto& renderInfo = ecs.registry.emplace<RenderInfo>(connector);
+
+        const auto info = RenderSpritesheet[cellTag.type];
+        renderInfo.glyph = info.glyph;
+        renderInfo.textColor = info.textColor;
+        renderInfo.bgColor = info.bgColor;
+
+        ecs.registry.emplace<Inventory>(connector);
+        ecs.registry.remove<ConnectorTag>(connector);
+        cells_.insert(connector);
+        // connectors_.erase(connector);
+    }
+    connectors_.clear();
 }

@@ -9,11 +9,12 @@
 
 #include <algorithm>
 #include <memory>
+#include <set>
 
 #include "Cell.h"
 #include "Entity.h"
-#include "Graph.h"
 #include "Room.h"
+#include "RoomGraph.h"
 #include "SwordItem.h"
 #include "util.h"
 
@@ -115,32 +116,52 @@ class Map {
     [[nodiscard]] auto roomWithConnectionCount() const -> int;
 
     std::vector<int> roomConnectionsBFS() {
-        std::vector<int> roomsBFS = rooms_.BFS();
-        return roomsBFS;
+        if (roomsBFS_.size() == 0) {
+            roomsBFS_ = rooms_.BFS();
+        }
+        return roomsBFS_;
     }
 
-    void generateMonsters() {
-        //        std::vector<int> roomsBFS = rooms_.BFS();
-        //        for (int i = 0; i < roomsBFS.size(); i++) {
-        //            auto room = rooms_.elementAt(roomsBFS[i]);
-        //            const auto& cells = room->getWalkablePositions();
-        //            if (i > 2) {
-        //                if (Rng::getInstance().getRandomInt(0, 100) < (i / roomsBFS.size()) * 100) {
-        //                    //                    auto monster =
-        //                    //                        createMonster(select_random(cells,
-        //                    Rng::getInstance().getRandomInt(0,
-        //                    //                        cells.size())));
-        //                    //                    //                    room->addMonster(MonsterType::kGoblin);
-        //                }
-        //            }
-        //        }
+    //    void generateMonsters() {
+    //        std::vector<int> roomsBFS = rooms_.BFS();
+    //        for (int i = 0; i < roomsBFS.size(); i++) {
+    //            auto room = rooms_.elementAt(roomsBFS[i]);
+    //            const auto& cells = room->getWalkablePositions();
+    //            if (i > 1) {
+    //                auto maxMonsters = Rng::getInstance().getRandomInt(5, 10);
+    //                for (int j = 0; j < maxMonsters; j++) {
+    //                    if (Rng::getInstance().getRandomInt(0, 100) < 50) {
+    //                        auto spawnPos = *select_random(cells, Rng::getInstance().getRandomInt(0, cells.size()));
+    //                        auto monster = createMonster(spawnPos.row, spawnPos.col);
+    //                        //                    //                    room->addMonster(MonsterType::kGoblin);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+
+    void finalize() {
+        for (const auto& room : rooms_.elements()) {
+            room->finalize();
+        }
     }
+
+    auto doors() const -> const std::set<entt::entity> { return doors_; }
+    void setDoors(const std::set<entt::entity>& doors) { doors_ = doors; }
+    //    void makeDoor(entt::entity cellEntity);
+
+    auto getNeighborsId(RoomPtr room) const { return rooms_.getNeighborsId(room); }
+
+    auto roomGraph() const -> const RoomGraph& { return rooms_; }
 
    private:
     //    int width_;
     //    int height_;
 
-    Graph<std::shared_ptr<Room>> rooms_;
+    RoomGraph rooms_;
+    // Graph<std::shared_ptr<Room>> rooms_;
+    std::set<entt::entity> doors_;
+    std::vector<int> roomsBFS_;
 };
 
 #endif  // RL_DA_ZERO_MAP_H
